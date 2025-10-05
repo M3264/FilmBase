@@ -83,7 +83,9 @@ export async function getMenuContent(menuPath: string): Promise<MenuContent> {
 
 export async function getGenreMovies(genre: string, page = 1): Promise<SearchResult> {
   const cleanGenre = genre.replace(/\/$/, "")
-  const res = await fetch(`${BASE_URL}/api/${cleanGenre}?page=${page}`, { cache: "no-store" })
+  const res = await fetch(`${BASE_URL}/api/list/${encodeURIComponent(cleanGenre)}/?page=${page}`, { 
+    cache: "no-store" 
+  })
   const data = await res.json()
   return data.data
 }
