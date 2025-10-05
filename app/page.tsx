@@ -1,22 +1,38 @@
-import { getHomeData, getNavLinks } from "@/lib/api"
+import { getHomeData, getNavLinks, getGenreMovies, getMenuContent } from "@/lib/api"
 import { Header } from "@/components/header"
 import { MovieSection } from "@/components/movie-section"
 import { Footer } from "@/components/footer"
 import Link from "next/link"
 
 export default async function HomePage() {
-  const [sections, navLinks] = await Promise.all([getHomeData(), getNavLinks()])
+  const navLinks = await getNavLinks()
 
-  const actionSection = sections.find((s) => s.title.toLowerCase().includes("action"))
-  const animationSection = sections.find((s) => s.title.toLowerCase().includes("animation"))
-  const kdramaSection = sections.find(
-    (s) => s.title.toLowerCase().includes("drama") || s.title.toLowerCase().includes("k-drama")
-  )
-  const seriesSection = sections.find(
-    (s) => s.title.toLowerCase().includes("series") || s.title.toLowerCase().includes("tv")
-  )
+  const [actionData, animationData, kdramaData, seriesData] = await Promise.all([
+    getGenreMovies("tag/action", 1).catch(() => null),
+    getGenreMovies("tag/animation", 1).catch(() => null),
+    getMenuContent("korean-drama-menu").catch(() => null),
+    getMenuContent("tv-series-menu").catch(() => null),
+  ])
 
-  const featuredSections = [actionSection, animationSection, kdramaSection, seriesSection].filter(Boolean)
+  const actionSection = actionData ? {
+    title: "Action Movies",
+    items: actionData.items.slice(0, 6)
+  } : null
+
+  const animationSection = animationData ? {
+    title: "Animation",
+    items: animationData.items.slice(0, 6)
+  } : null
+
+  const kdramaSection = kdramaData?.sections?.[0] ? {
+    title: "K-Drama",
+    items: kdramaData.sections[0].items.slice(0, 6)
+  } : null
+
+  const seriesSection = seriesData?.sections?.[0] ? {
+    title: "TV Series",
+    items: seriesData.sections[0].items.slice(0, 6)
+  } : null
 
   return (
     <div className="min-h-screen">
