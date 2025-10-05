@@ -43,7 +43,7 @@ export default async function MoviePage({
       }
     }
   } catch (error) {
-    console.error("[v0] Error searching for movie thumbnail:", error)
+    console.error("Error searching for movie thumbnail:", error)
   }
 
   if (!imageUrl && movie.relatedMovies[0]?.imageUrl) {
@@ -87,7 +87,13 @@ export default async function MoviePage({
             <div className="space-y-3">
               <h2 className="text-lg font-semibold">Download</h2>
               {movie.downloadItems.map((item, index) => (
-                <DownloadButton key={index} intermediateUrl={item.intermediateUrl} text={item.text} />
+                <DownloadButton 
+                  key={index} 
+                  intermediateUrl={item.intermediateUrl} 
+                  text={item.text}
+                  season={item.season}
+                  episode={item.episode}
+                />
               ))}
             </div>
           </div>

@@ -6,55 +6,60 @@ import { Download, Loader2 } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
 import { resolveDownloadLink } from "@/lib/api"
 
-function parseDownloadText(text: string): string {
-  const s0eMatch = text.match(/S(\d+)E(\d+)/i)
-  const seasonEpisodeMatch = text.match(/Season\s*(\d+)\s*Episode\s*(\d+)/i)
-  const episodeSeasonMatch = text.match(/Episode\s*(\d+)\s*Season\s*(\d+)/i)
-  const episodeMatch = text.match(/Episode\s*(\d+)/i)
-  const seasonMatch = text.match(/Season\s*(\d+)/i)
-  const epMatch = text.match(/\bEp\.?\s*(\d+)/i)
-  const numberOnlyMatch = text.match(/^(\d+)$/)
+interface DownloadButtonProps {
+  intermediateUrl: string
+  text: string
+  season?: string
+  episode?: string
+}
 
+function formatDownloadText(text: string, season?: string, episode?: string): string {
+  if (season && episode) {
+    const seasonNum = season.match(/\d+/)?.[0]
+    const episodeNum = episode.match(/\d+/)?.[0]
+    
+    if (seasonNum && episodeNum) {
+      return `Download S${seasonNum.padStart(2, "0")}E${episodeNum.padStart(2, "0")}`
+    }
+  }
+
+  if (episode) {
+    const episodeNum = episode.match(/\d+/)?.[0]
+    if (episodeNum) {
+      return `Download Episode ${episodeNum}`
+    }
+  }
+
+  if (season) {
+    const seasonNum = season.match(/\d+/)?.[0]
+    if (seasonNum) {
+      return `Download Season ${seasonNum}`
+    }
+  }
+
+  const s0eMatch = text.match(/S(\d+)E(\d+)/i)
   if (s0eMatch) {
     return `Download S${s0eMatch[1].padStart(2, "0")}E${s0eMatch[2].padStart(2, "0")}`
   }
 
+  const seasonEpisodeMatch = text.match(/Season\s*(\d+)\s*Episode\s*(\d+)/i)
   if (seasonEpisodeMatch) {
     return `Download S${seasonEpisodeMatch[1].padStart(2, "0")}E${seasonEpisodeMatch[2].padStart(2, "0")}`
   }
 
-  if (episodeSeasonMatch) {
-    return `Download S${episodeSeasonMatch[2].padStart(2, "0")}E${episodeSeasonMatch[1].padStart(2, "0")}`
-  }
-
-  if (episodeMatch && seasonMatch) {
-    return `Download S${seasonMatch[1].padStart(2, "0")}E${episodeMatch[1].padStart(2, "0")}`
-  }
-
+  const episodeMatch = text.match(/Episode\s*(\d+)/i)
   if (episodeMatch) {
     return `Download Episode ${episodeMatch[1]}`
-  }
-
-  if (epMatch) {
-    return `Download Episode ${epMatch[1]}`
-  }
-
-  if (seasonMatch) {
-    return `Download Season ${seasonMatch[1]}`
-  }
-
-  if (numberOnlyMatch) {
-    return `Download Episode ${numberOnlyMatch[1]}`
   }
 
   return text.includes("Download") ? text : `Download ${text}`
 }
 
-export function DownloadButton({ intermediateUrl, text }: { intermediateUrl: string; text: string }) {
+export function DownloadButton({ intermediateUrl, text, season, episode }: DownloadButtonProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [downloadProgress, setDownloadProgress] = useState(0)
 
-  const displayText = parseDownloadText(text)
+  const displayText = formatDownloadText(text, season, episode)
 
   const handleDownload = async () => {
     try {

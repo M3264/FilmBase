@@ -32,6 +32,8 @@ export interface MovieDetails {
     type: string
     text: string
     intermediateUrl: string
+    season?: string
+    episode?: string
   }>
   tags: string[]
   relatedMovies: MovieItem[]
