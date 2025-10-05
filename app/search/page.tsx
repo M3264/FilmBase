@@ -39,6 +39,14 @@ export default async function SearchPage({
 
   try {
     const results = await searchMovies(query, page)
+    
+    const cleanTitle = (title: string) => {
+      return title
+        .replace(/\s*-\s*nkiri\s*/gi, "")
+        .replace(/\s*nkiri\s*/gi, "")
+        .replace(/\s+archives\s*/gi, "")
+        .trim()
+    }
 
     return (
       <div className="min-h-screen">

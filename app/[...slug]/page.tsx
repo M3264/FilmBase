@@ -14,8 +14,20 @@ interface PageProps {
   }
 }
 
+function cleanTitle(title: string): string {
+  return title
+    .replace(/\s*-\s*nkiri\s*/gi, "")
+    .replace(/\s*nkiri\s*/gi, "")
+    .trim()
+}
+
 export default async function SlugPage({ params, searchParams }: PageProps) {
   const navLinks = await getNavLinks()
+  
+  if (!params.slug || params.slug.length === 0) {
+    notFound()
+  }
+
   const fullPath = params.slug.join("/")
   const currentPage = Number(searchParams.page) || 1
 
@@ -24,6 +36,7 @@ export default async function SlugPage({ params, searchParams }: PageProps) {
   try {
     if (isTagPage) {
       const genreData = await getGenreMovies(fullPath, currentPage)
+      const cleanedTitle = cleanTitle(genreData.listTitle)
 
       return (
         <div className="min-h-screen">
@@ -32,7 +45,7 @@ export default async function SlugPage({ params, searchParams }: PageProps) {
           <main className="container mx-auto px-4 pt-24 pb-12">
             <div className="mb-12">
               <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-4">
-                {genreData.listTitle}
+                {cleanedTitle}
               </h1>
               <p className="text-lg text-muted-foreground">
                 Page {genreData.currentPage} of {genreData.totalPages}
