@@ -24,7 +24,7 @@ function cleanTitle(title: string): string {
 
 export default async function SlugPage({ params, searchParams }: PageProps) {
   const navLinks = await getNavLinks()
-  
+  console.log(params)
   if (!params || !params.slug || params.slug.length === 0) {
     notFound()
   }
