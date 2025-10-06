@@ -46,11 +46,7 @@ export default async function MoviePage({
     console.error("Error searching for movie thumbnail:", error)
   }
 
-  if (!imageUrl && movie.relatedMovies[0]?.imageUrl) {
-    imageUrl = movie.relatedMovies[0].imageUrl.startsWith("http")
-      ? movie.relatedMovies[0].imageUrl
-      : `${BASE_URL}/api/image${movie.relatedMovies[0].imageUrl}`
-  }
+  const relatedMoviesWithImages = movie.relatedMovies.filter(m => m.imageUrl)
 
   return (
     <div className="min-h-screen">
@@ -58,11 +54,11 @@ export default async function MoviePage({
 
       <main className="container mx-auto px-4 pt-24 pb-12">
         <div className="grid md:grid-cols-[300px_1fr] gap-8 mb-12">
-          <div className="relative aspect-[2/3] overflow-hidden rounded-lg bg-secondary">
-            {imageUrl && (
-              <Image src={imageUrl || "/placeholder.svg"} alt={movie.title} fill className="object-cover" priority />
-            )}
-          </div>
+          {imageUrl && (
+            <div className="relative aspect-[2/3] overflow-hidden rounded-lg bg-secondary">
+              <Image src={imageUrl} alt={movie.title} fill className="object-cover" priority />
+            </div>
+          )}
 
           <div className="space-y-6">
             <div>
@@ -99,11 +95,11 @@ export default async function MoviePage({
           </div>
         </div>
 
-        {movie.relatedMovies.length > 0 && (
+        {relatedMoviesWithImages.length > 0 && (
           <section className="space-y-4">
             <h2 className="text-2xl font-bold tracking-tight">Related Movies</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-              {movie.relatedMovies.map((relatedMovie, index) => (
+              {relatedMoviesWithImages.map((relatedMovie, index) => (
                 <MovieCard key={`${relatedMovie.path}-${index}`} movie={relatedMovie} />
               ))}
             </div>
