@@ -24,14 +24,13 @@ function cleanTitle(title: string): string {
 
 export default async function SlugPage({ params, searchParams }: PageProps) {
   const navLinks = await getNavLinks()
-  console.log(params)
+  
   if (!params || !params.slug || params.slug.length === 0) {
     notFound()
   }
 
   const fullPath = Array.isArray(params.slug) ? params.slug.join("/") : String(params.slug)
   const currentPage = Number(searchParams?.page) || 1
-console.log(fullPath)
 
   const isTagPage = typeof fullPath === 'string' && fullPath.startsWith("tag/")
 
@@ -88,9 +87,11 @@ console.log(fullPath)
     }
 
     const menuData = await getMenuContent(fullPath)
+    
+    if (!menuData || !menuData.sections || menuData.sections.length === 0) {
+      notFound()
+    }
 
-
-console.log(menuData)
     return (
       <div className="min-h-screen">
         <Header navLinks={navLinks} />
