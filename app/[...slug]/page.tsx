@@ -31,6 +31,7 @@ export default async function SlugPage({ params, searchParams }: PageProps) {
 
   const fullPath = Array.isArray(params.slug) ? params.slug.join("/") : String(params.slug)
   const currentPage = Number(searchParams?.page) || 1
+console.log(fullPath)
 
   const isTagPage = typeof fullPath === 'string' && fullPath.startsWith("tag/")
 
@@ -88,6 +89,8 @@ export default async function SlugPage({ params, searchParams }: PageProps) {
 
     const menuData = await getMenuContent(fullPath)
 
+
+console.log(menuData)
     return (
       <div className="min-h-screen">
         <Header navLinks={navLinks} />
