@@ -18,20 +18,21 @@ function cleanTitle(title: string): string {
   return title
     .replace(/\s*-\s*nkiri\s*/gi, "")
     .replace(/\s*nkiri\s*/gi, "")
+    .replace(/\s+archives\s*/gi, "")
     .trim()
 }
 
 export default async function SlugPage({ params, searchParams }: PageProps) {
   const navLinks = await getNavLinks()
   
-  if (!params.slug || params.slug.length === 0) {
+  if (!params || !params.slug || params.slug.length === 0) {
     notFound()
   }
 
-  const fullPath = params.slug.join("/")
-  const currentPage = Number(searchParams.page) || 1
+  const fullPath = Array.isArray(params.slug) ? params.slug.join("/") : String(params.slug)
+  const currentPage = Number(searchParams?.page) || 1
 
-  const isTagPage = fullPath.startsWith("tag/")
+  const isTagPage = typeof fullPath === 'string' && fullPath.startsWith("tag/")
 
   try {
     if (isTagPage) {
