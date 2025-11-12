@@ -69,8 +69,8 @@ export function DownloadButton({ intermediateUrl, text, season, episode }: Downl
       let directLink = intermediateUrl
       let fileName = "download"
 
-      // coming back 
-      if (intermediateUrl.startsWith("https://kennyy.xyz/")) {
+      
+      if (intermediateUrl.startsWith("https://downloadwella.com/")) {
         setDownloadProgress(15)
 
         const progressStages = [
