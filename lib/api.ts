@@ -1,4 +1,4 @@
-const BASE_URL = "https://silver-fishstick-chi.vercel.app"
+const BASE_URL = "https://silver-fishstick-smoky.vercel.app"
 
 export interface NavLinks {
   genres: Array<{ name: string; path: string }>
