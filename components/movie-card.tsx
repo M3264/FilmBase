@@ -2,7 +2,7 @@ import Link from "next/link"
 import Image from "next/image"
 import type { MovieItem } from "@/lib/api"
 
-const BASE_URL = "https://silver-fishstick-smoky.vercel.app"
+const BASE_URL = "https://silver-fishstick-y2se.onrender.com"
 
 export function MovieCard({ movie }: { movie: MovieItem }) {
   const imageUrl = movie.imageUrl
