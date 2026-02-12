@@ -7,7 +7,7 @@ import Image from "next/image"
 import { Play } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
-const BASE_URL = "https://silver-fishstick-smoky.vercel.app"
+const BASE_URL = "https://silver-fishstick-y2se.onrender.com"
 
 export default async function MoviePage({
   params,
