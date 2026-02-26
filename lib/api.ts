@@ -1,4 +1,4 @@
-const BASE_URL = "https://silver-fishstick-y2se.onrender.com"
+const BASE_URL = "https://silver-fishstic.onrender.com"
 
 export interface NavLinks {
   genres: Array<{ name: string; path: string }>
