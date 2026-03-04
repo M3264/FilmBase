@@ -4,6 +4,7 @@ import { MovieSection } from "@/components/movie-section"
 import { Footer } from "@/components/footer"
 import Link from "next/link"
 
+
 export default async function HomePage() {
   const navLinks = await getNavLinks()
 
