@@ -7,7 +7,7 @@ import Image from "next/image"
 import { Play } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
-const BASE_URL = "https://silver-fishstic.onrender.com"
+const BASE_URL = "https://api.filmbase.fun"
 
 export default async function MoviePage({
   params,
