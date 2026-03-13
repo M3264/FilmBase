@@ -2,7 +2,7 @@ import Link from "next/link"
 import Image from "next/image"
 import type { MovieItem } from "@/lib/api"
 
-const BASE_URL = "https://silver-fishstic.onrender.com"
+const BASE_URL = "https://api.filmbase.fun"
 
 export function MovieCard({ movie }: { movie: MovieItem }) {
   const imageUrl = movie.imageUrl
