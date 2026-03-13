@@ -1,4 +1,4 @@
-const BASE_URL = "https://silver-fishstic.onrender.com"
+const BASE_URL = "https://api.filmbase.fun"
 
 export interface NavLinks {
   genres: Array<{ name: string; path: string }>
