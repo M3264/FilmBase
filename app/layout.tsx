@@ -4,6 +4,7 @@ import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import { Analytics } from "@vercel/analytics/next"
 import { Suspense } from "react"
+import Script from "next/script"
 import { ThemeProvider } from "@/components/theme-provider"
 import { LoadingOverlay } from "@/components/loading-overlay"
 import "./globals.css"
@@ -23,9 +24,17 @@ export default function RootLayout({
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
         <ThemeProvider defaultTheme="dark">
           <LoadingOverlay />
-          <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
+          <Suspense fallback={<div>Loading...</div>}>
+            {children}
+          </Suspense>
         </ThemeProvider>
+
         <Analytics />
+
+        <Script
+          src="https://scripts.simpleanalyticscdn.com/latest.js"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   )
