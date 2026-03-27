@@ -5,11 +5,31 @@ import type { MovieItem } from "@/lib/api"
 const BASE_URL = "https://api.filmbase.fun"
 
 export function MovieCard({ movie }: { movie: MovieItem }) {
-  const imageUrl = movie.imageUrl
-    ? movie.imageUrl.startsWith("http")
-      ? movie.imageUrl
-      : `${BASE_URL}/api/image${movie.imageUrl}`
-    : null
+  let imageUrl = null
+
+  if (movie.imageUrl) {
+    if (movie.imageUrl.startsWith('http')) {
+      try {
+        const u = new URL(movie.imageUrl)
+
+        if (
+          u.hostname === 'thenkiri.ng' &&
+          u.pathname.startsWith('/wp-content/')
+        ) {
+          imageUrl = `${BASE_URL}/api/image${u.pathname}`
+        } else {
+          imageUrl = movie.imageUrl
+        }
+      } catch {
+        imageUrl = movie.imageUrl
+      }
+    } else if (movie.imageUrl.startsWith('/wp-content/')) {
+      imageUrl = `${BASE_URL}/api/image${movie.imageUrl}`
+    } else {
+      imageUrl = movie.imageUrl
+    }
+  }
+}
 
   return (
     <Link href={`/movie/${movie.path}`} className="group">
