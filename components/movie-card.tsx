@@ -29,7 +29,6 @@ export function MovieCard({ movie }: { movie: MovieItem }) {
       imageUrl = movie.imageUrl
     }
   }
-}
 
   return (
     <Link href={`/movie/${movie.path}`} className="group">
