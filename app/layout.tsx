@@ -16,12 +16,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: Readonly<{ 
   children: React.ReactNode
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
+      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}> 
         <ThemeProvider defaultTheme="dark">
           <LoadingOverlay />
           <Suspense fallback={<div>Loading...</div>}>
@@ -33,6 +33,13 @@ export default function RootLayout({
 
         <Script
           src="https://scripts.simpleanalyticscdn.com/latest.js"
+          strategy="afterInteractive"
+        />
+
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5635313643679003"
+          crossOrigin="anonymous"
           strategy="afterInteractive"
         />
       </body>
