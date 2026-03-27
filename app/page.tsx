@@ -1,39 +1,35 @@
-import { getHomeData, getNavLinks, getGenreMovies, getMenuContent } from "@/lib/api"
+import { getNavLinks, getGenreMovies } from "@/lib/api"
 import { Header } from "@/components/header"
 import { MovieSection } from "@/components/movie-section"
 import { Footer } from "@/components/footer"
 import Link from "next/link"
 
-
 export default async function HomePage() {
   const navLinks = await getNavLinks()
 
-  const [actionData, animationData, kdramaData, seriesData] = await Promise.all([
-    getGenreMovies("tag/action", 1).catch(() => null),
-    getGenreMovies("tag/animation", 1).catch(() => null),
-    getMenuContent("korean-drama-menu").catch(() => null),
-    getMenuContent("tv-series-menu").catch(() => null),
-  ])
+  // Fetch movies for each category in parallel
+  const categoryResults = await Promise.all(
+    navLinks.categories.map((cat) =>
+      getGenreMovies(cat.path, 1).catch(() => null)
+    )
+  )
 
-  const actionSection = actionData ? {
-    title: "Action Movies",
-    items: actionData.items.slice(0, 6)
-  } : null
-
-  const animationSection = animationData ? {
-    title: "Animation",
-    items: animationData.items.slice(0, 6)
-  } : null
-
-  const kdramaSection = kdramaData?.sections?.[0] ? {
-    title: "K-Drama",
-    items: kdramaData.sections[0].items.slice(0, 6)
-  } : null
-
-  const seriesSection = seriesData?.sections?.[0] ? {
-    title: "TV Series",
-    items: seriesData.sections[0].items.slice(0, 6)
-  } : null
+  const sections = navLinks.categories
+    .map((cat, i) => {
+      const data = categoryResults[i]
+      if (!data || !data.items?.length) return null
+      return {
+        category: cat,
+        section: {
+          title: cat.name,
+          items: data.items.slice(0, 6),
+        },
+      }
+    })
+    .filter(Boolean) as Array<{
+    category: { name: string; path: string }
+    section: { title: string; items: any[] }
+  }>
 
   return (
     <div className="min-h-screen">
@@ -51,64 +47,55 @@ export default async function HomePage() {
           </p>
         </div>
 
+        {/* Category sections */}
         <div className="space-y-12">
-          {actionSection && (
-            <MovieSection 
-              section={actionSection} 
-              moreLink="/tag/action" 
+          {sections.map(({ category, section }) => (
+            <MovieSection
+              key={category.path}
+              section={section}
+              moreLink={`/${category.path}`}
             />
-          )}
-
-          {animationSection && (
-            <MovieSection 
-              section={animationSection} 
-              moreLink="/tag/animation" 
-            />
-          )}
-
-          {kdramaSection && (
-            <MovieSection 
-              section={kdramaSection} 
-              moreLink="/korean-drama-menu" 
-            />
-          )}
-
-          {seriesSection && (
-            <MovieSection 
-              section={seriesSection} 
-              moreLink="/tv-series-menu" 
-            />
-          )}
+          ))}
         </div>
 
-        <div className="mt-16 pt-12 border-t border-border">
-          <h2 className="text-2xl font-bold tracking-tight mb-6 text-center">Browse by Genre</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {navLinks.genres.map((genre) => (
-              <Link
-                key={genre.path}
-                href={`/${genre.path}`}
-                className="px-6 py-4 bg-secondary hover:bg-secondary/80 rounded-lg text-center transition-colors font-medium"
-              >
-                {genre.name}
-              </Link>
-            ))}
+        {/* Browse by Category grid */}
+        {navLinks.categories.length > 0 && (
+          <div className="mt-16 pt-12 border-t border-border">
+            <h2 className="text-2xl font-bold tracking-tight mb-6 text-center">
+              Browse by Category
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {navLinks.categories.map((cat) => (
+                <Link
+                  key={cat.path}
+                  href={`/${cat.path}`}
+                  className="px-6 py-4 bg-secondary hover:bg-secondary/80 rounded-lg text-center transition-colors font-medium"
+                >
+                  {cat.name}
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
-        <div className="mt-12">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {navLinks.menuPages.filter(page => page.path).map((page) => (
-              <Link
-                key={page.path}
-                href={`/${page.path}`}
-                className="px-6 py-4 bg-primary/10 hover:bg-primary/20 rounded-lg text-center transition-colors font-medium"
-              >
-                {page.name}
-              </Link>
-            ))}
+        {/* Menu pages grid — only rendered if menuPages exist */}
+        {navLinks.menuPages.filter((p) => p.path).length > 0 && (
+          <div className="mt-12">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {navLinks.menuPages
+                .filter((page) => page.path)
+                .map((page) => (
+                  <Link
+                    key={page.path}
+                    href={`/${page.path}`}
+                    className="px-6 py-4 bg-primary/10 hover:bg-primary/20 rounded-lg text-center transition-colors font-medium"
+                  >
+                    {page.name}
+                  </Link>
+                ))}
+            </div>
           </div>
-        </div>
+        )}
       </main>
 
       <Footer />

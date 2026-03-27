@@ -2,7 +2,11 @@ const BASE_URL = "https://api.filmbase.fun"
 
 export interface NavLinks {
   genres: Array<{ name: string; path: string }>
-  categories: Array<{ name: string; path: string }>
+  categories: Array<{
+    name: string
+    path: string
+    subCategories: Array<{ name: string; path: string }>
+  }>
   menuPages: Array<{ name: string; path: string }>
 }
 
@@ -85,8 +89,8 @@ export async function getMenuContent(menuPath: string): Promise<MenuContent> {
 
 export async function getGenreMovies(genre: string, page = 1): Promise<SearchResult> {
   const cleanGenre = genre.replace(/\/$/, "")
-  const res = await fetch(`${BASE_URL}/api/list/${encodeURIComponent(cleanGenre)}/?page=${page}`, { 
-    cache: "no-store" 
+  const res = await fetch(`${BASE_URL}/api/list/${encodeURIComponent(cleanGenre)}/?page=${page}`, {
+    cache: "no-store",
   })
   const data = await res.json()
   return data.data
