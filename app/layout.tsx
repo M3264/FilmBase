@@ -16,12 +16,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{ 
+}: Readonly<{
   children: React.ReactNode
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}> 
+      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
         <ThemeProvider defaultTheme="dark">
           <LoadingOverlay />
           <Suspense fallback={<div>Loading...</div>}>
@@ -30,21 +30,26 @@ export default function RootLayout({
         </ThemeProvider>
 
         <Analytics />
-        
-        <Script 
-		  src="https://pl28996782.profitablecpmratenetwork.com/8b/15/bd/8b15bd93ad7b847fc91e7aeb8cf99c94.js"
-		  strategy="afterInteractive"
-		/>  
-		
+
+        <Script
+          src="https://pl28996782.profitablecpmratenetwork.com/8b/15/bd/8b15bd93ad7b847fc91e7aeb8cf99c94.js"
+          strategy="afterInteractive"
+        />
+
         <Script
           src="https://scripts.simpleanalyticscdn.com/latest.js"
           strategy="afterInteractive"
         />
-        
+
         <Script
-          async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5635313643679003"
           crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
+
+        <Script
+          src="https://personal-umami.luvhuj.easypanel.host/script.js"
+          data-website-id="58a28357-d9a1-42df-88d8-cc9b8332dce2"
           strategy="afterInteractive"
         />
       </body>
