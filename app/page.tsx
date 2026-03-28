@@ -46,7 +46,34 @@ export default async function HomePage() {
             Explore thousands of movies, TV series, and K-dramas. Download and enjoy premium content.
           </p>
         </div>
-
+        
+        <!-- Add after the hero heading, around line 48 -->
+        <div className="mt-6 flex justify-center">
+          <a 
+            href="https://www.profitablecpmratenetwork.com/pezbathst?key=e535449979fdb755d369844fe1353106"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-8 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors font-medium"
+          >
+          Explore Offers
+          </a>
+      </div>
+        
+        <!-- Around line 49, after the description -->
+        <div className="my-8">
+          <div id="ad-banner-1"></div>
+          <Script strategy="afterInteractive">{`
+          atOptions = {
+          'key': '5cb8349e16542b4afa6dcd9e470b5d9a',
+          'format': 'iframe',
+          'height': 60,
+          'width': 468,
+          'params': {}
+          };
+         `}</Script>
+          <Script src="https://www.highperformanceformat.com/5cb8349e16542b4afa6dcd9e470b5d9a/invoke.js" strategy="afterInteractive" />
+          </div>
+          
         {/* Category sections */}
         <div className="space-y-12">
           {sections.map(({ category, section }) => (
@@ -57,7 +84,22 @@ export default async function HomePage() {
             />
           ))}
         </div>
-
+        
+        <!-- Around line 59, after the first category section loop -->
+        <div className="my-12">
+          <div id="ad-banner-2"></div>
+          <Script strategy="afterInteractive">{`
+          atOptions = {
+          'key': '87ab4027f73db069de8b89cf3e5b854a',
+          'format': 'iframe',
+          'height': 90,
+          'width': 728,
+          'params': {}
+          };
+          `}</Script>
+          <Script src="https://www.highperformanceformat.com/87ab4027f73db069de8b89cf3e5b854a/invoke.js" strategy="afterInteractive" />
+          </div>
+          
         {/* Browse by Category grid */}
         {navLinks.categories.length > 0 && (
           <div className="mt-16 pt-12 border-t border-border">

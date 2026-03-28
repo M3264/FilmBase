@@ -14,8 +14,18 @@ export function Footer() {
               Created by <span className="text-foreground font-medium">Kenny</span>
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              © {new Date().getFullYear()} FilmBase. All rights reserved.
+               {new Date().getFullYear()} FilmBase. No copyright acclaimed.
             </p>
+          </div>
+          <!-- Add inside the footer container, after the copyright section -->
+          <div className="mt-8 pt-8 border-t border-border">
+            <div id="container-aadc53e5aa579316a6819840d149ca4b"></div>
+            <Script 
+             async
+             data-cfasync="false"
+              src="https://pl28996783.profitablecpmratenetwork.com/aadc53e5aa579316a6819840d149ca4b/invoke.js"
+    strategy="afterInteractive"
+          />
           </div>
         </div>
       </div>

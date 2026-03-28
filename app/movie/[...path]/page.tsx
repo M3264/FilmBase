@@ -6,6 +6,7 @@ import { DownloadButton } from "@/components/download-button"
 import Image from "next/image"
 import { Play } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import Script from "next/script"
 
 const BASE_URL = "https://api.filmbase.fun"
 
@@ -50,6 +51,12 @@ export default async function MoviePage({
 
   return (
     <div className="min-h-screen">
+      {/* Social Bar — loads globally, floats on screen */}
+      <Script
+        src="https://pl28996782.profitablecpmratenetwork.com/8b/15/bd/8b15bd93ad7b847fc91e7aeb8cf99c94.js"
+        strategy="afterInteractive"
+      />
+
       <Header navLinks={navLinks} />
 
       <main className="container mx-auto px-4 pt-24 pb-12">
@@ -80,20 +87,71 @@ export default async function MoviePage({
               </a>
             )}
 
+            {/* Native Banner (4:1 widget) — between trailer and download */}
+            <div className="w-full">
+              <Script
+                async
+                data-cfasync="false"
+                src="https://pl28996783.profitablecpmratenetwork.com/aadc53e5aa579316a6819840d149ca4b/invoke.js"
+                strategy="afterInteractive"
+              />
+              <div id="container-aadc53e5aa579316a6819840d149ca4b" />
+            </div>
+
             <div className="space-y-3">
               <h2 className="text-lg font-semibold">Download</h2>
               {movie.downloadItems.map((item, index) => (
-                <DownloadButton 
-                  key={index} 
-                  intermediateUrl={item.intermediateUrl} 
+                <DownloadButton
+                  key={index}
+                  intermediateUrl={item.intermediateUrl}
                   text={item.text}
                   season={item.season}
                   episode={item.episode}
                 />
               ))}
             </div>
+
+            {/* Banner (468x60) — right below download buttons */}
+            <div className="flex justify-center">
+              <Script strategy="afterInteractive">
+                {`
+                  atOptions = {
+                    'key': '5cb8349e16542b4afa6dcd9e470b5d9a',
+                    'format': 'iframe',
+                    'height': 60,
+                    'width': 468,
+                    'params': {}
+                  };
+                `}
+              </Script>
+              <Script
+                src="https://www.highperformanceformat.com/5cb8349e16542b4afa6dcd9e470b5d9a/invoke.js"
+                strategy="afterInteractive"
+              />
+            </div>
           </div>
         </div>
+
+        {/* Banner (728x90) — above related movies, full width */}
+        {relatedMoviesWithImages.length > 0 && (
+          <div className="flex justify-center mb-8">
+            <Script strategy="afterInteractive">
+              {`
+                atOptions = {
+                  'key': '87ab4027f73db069de8b89cf3e5b854a',
+                  'format': 'iframe',
+                  'height': 90,
+                  'width': 728,
+                  'params': {}
+                };
+              `}
+            </Script>
+            <Script
+              src="https://www.highperformanceformat.com/87ab4027f73db069de8b89cf3e5b854a/invoke.js"
+              strategy="afterInteractive"
+            />
+          </div>
+        )}
 
         {relatedMoviesWithImages.length > 0 && (
           <section className="space-y-4">

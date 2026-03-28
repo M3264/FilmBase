@@ -30,7 +30,12 @@ export default function RootLayout({
         </ThemeProvider>
 
         <Analytics />
-
+        
+        <Script 
+		  src="https://pl28996782.profitablecpmratenetwork.com/8b/15/bd/8b15bd93ad7b847fc91e7aeb8cf99c94.js"
+		  strategy="afterInteractive"
+		/>  
+		
         <Script
           src="https://scripts.simpleanalyticscdn.com/latest.js"
           strategy="afterInteractive"
