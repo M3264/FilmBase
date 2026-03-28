@@ -1,3 +1,7 @@
+"use client"
+
+import Script from "next/script"
+
 export function Footer() {
   return (
     <footer className="border-t border-border mt-20">
@@ -14,19 +18,20 @@ export function Footer() {
               Created by <span className="text-foreground font-medium">Kenny</span>
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-               {new Date().getFullYear()} FilmBase. No copyright acclaimed.
+              {new Date().getFullYear()} FilmBase. No copyright acclaimed.
             </p>
           </div>
-          <!-- Add inside the footer container, after the copyright section -->
-          <div className="mt-8 pt-8 border-t border-border">
-            <div id="container-aadc53e5aa579316a6819840d149ca4b"></div>
-            <Script 
-             async
-             data-cfasync="false"
-              src="https://pl28996783.profitablecpmratenetwork.com/aadc53e5aa579316a6819840d149ca4b/invoke.js"
-    strategy="afterInteractive"
+        </div>
+
+        {/* Native banner ad — footer */}
+        <div className="mt-8 pt-8 border-t border-border flex justify-center">
+          <div id="container-footer-native-banner" />
+          <Script
+            async
+            data-cfasync="false"
+            src="https://pl28996783.profitablecpmratenetwork.com/aadc53e5aa579316a6819840d149ca4b/invoke.js"
+            strategy="afterInteractive"
           />
-          </div>
         </div>
       </div>
     </footer>
