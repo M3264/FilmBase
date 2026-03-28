@@ -8,7 +8,6 @@ import Link from "next/link"
 export default async function HomePage() {
   const navLinks = await getNavLinks()
 
-  // Fetch movies for each category in parallel
   const categoryResults = await Promise.all(
     navLinks.categories.map((cat) =>
       getGenreMovies(cat.path, 1).catch(() => null)
@@ -34,6 +33,20 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen">
+      {/* Social Bar */}
+      <Script
+        src="https://pl28996782.profitablecpmratenetwork.com/8b/15/bd/8b15bd93ad7b847fc91e7aeb8cf99c94.js"
+        strategy="afterInteractive"
+      />
+
+      {/* Native banner script — loaded once, powers all container divs */}
+      <Script
+        async
+        data-cfasync="false"
+        src="https://pl28996783.profitablecpmratenetwork.com/aadc53e5aa579316a6819840d149ca4b/invoke.js"
+        strategy="afterInteractive"
+      />
+
       <Header navLinks={navLinks} />
 
       <main className="container mx-auto px-4 pt-24 pb-12">
@@ -49,35 +62,9 @@ export default async function HomePage() {
           </p>
         </div>
 
-        {/* Smartlink CTA */}
-        <div className="flex justify-center mb-6">
-          <a
-            href="https://www.profitablecpmratenetwork.com/pezbathst?key=e535449979fdb755d369844fe1353106"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-8 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors font-medium"
-          >
-            Explore Offers
-          </a>
-        </div>
-
-        {/* Banner 468x60 — below hero */}
-        <div className="my-8 flex justify-center">
-          <Script strategy="afterInteractive">
-            {`
-              atOptions = {
-                'key': '5cb8349e16542b4afa6dcd9e470b5d9a',
-                'format': 'iframe',
-                'height': 60,
-                'width': 468,
-                'params': {}
-              };
-            `}
-          </Script>
-          <Script
-            src="https://www.highperformanceformat.com/5cb8349e16542b4afa6dcd9e470b5d9a/invoke.js"
-            strategy="afterInteractive"
-          />
+        {/* Native 4:1 banner — below hero */}
+        <div className="w-full mb-12">
+          <div id="container-aadc53e5aa579316a6819840d149ca4b" />
         </div>
 
         {/* Category sections */}
@@ -91,28 +78,14 @@ export default async function HomePage() {
           ))}
         </div>
 
-        {/* Banner 728x90 — after category sections */}
-        <div className="my-12 flex justify-center">
-          <Script strategy="afterInteractive">
-            {`
-              atOptions = {
-                'key': '87ab4027f73db069de8b89cf3e5b854a',
-                'format': 'iframe',
-                'height': 90,
-                'width': 728,
-                'params': {}
-              };
-            `}
-          </Script>
-          <Script
-            src="https://www.highperformanceformat.com/87ab4027f73db069de8b89cf3e5b854a/invoke.js"
-            strategy="afterInteractive"
-          />
+        {/* Native 4:1 banner — between sections and category grid */}
+        <div className="w-full my-12">
+          <div id="container-aadc53e5aa579316a6819840d149ca4b-2" />
         </div>
 
         {/* Browse by Category grid */}
         {navLinks.categories.length > 0 && (
-          <div className="mt-16 pt-12 border-t border-border">
+          <div className="mt-4 pt-12 border-t border-border">
             <h2 className="text-2xl font-bold tracking-tight mb-6 text-center">
               Browse by Category
             </h2>
@@ -130,7 +103,7 @@ export default async function HomePage() {
           </div>
         )}
 
-        {/* Menu pages grid — only rendered if menuPages exist */}
+        {/* Menu pages grid */}
         {navLinks.menuPages.filter((p) => p.path).length > 0 && (
           <div className="mt-12">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

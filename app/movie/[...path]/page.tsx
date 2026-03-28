@@ -51,9 +51,17 @@ export default async function MoviePage({
 
   return (
     <div className="min-h-screen">
-      {/* Social Bar — loads globally, floats on screen */}
+      {/* Social Bar */}
       <Script
         src="https://pl28996782.profitablecpmratenetwork.com/8b/15/bd/8b15bd93ad7b847fc91e7aeb8cf99c94.js"
+        strategy="afterInteractive"
+      />
+
+      {/* Native banner script — loaded once, powers all container divs */}
+      <Script
+        async
+        data-cfasync="false"
+        src="https://pl28996783.profitablecpmratenetwork.com/aadc53e5aa579316a6819840d149ca4b/invoke.js"
         strategy="afterInteractive"
       />
 
@@ -87,14 +95,8 @@ export default async function MoviePage({
               </a>
             )}
 
-            {/* Native Banner (4:1 widget) — between trailer and download */}
+            {/* Native 4:1 banner — between trailer and download */}
             <div className="w-full">
-              <Script
-                async
-                data-cfasync="false"
-                src="https://pl28996783.profitablecpmratenetwork.com/aadc53e5aa579316a6819840d149ca4b/invoke.js"
-                strategy="afterInteractive"
-              />
               <div id="container-aadc53e5aa579316a6819840d149ca4b" />
             </div>
 
@@ -110,46 +112,13 @@ export default async function MoviePage({
                 />
               ))}
             </div>
-
-            {/* Banner (468x60) — right below download buttons */}
-            <div className="flex justify-center">
-              <Script strategy="afterInteractive">
-                {`
-                  atOptions = {
-                    'key': '5cb8349e16542b4afa6dcd9e470b5d9a',
-                    'format': 'iframe',
-                    'height': 60,
-                    'width': 468,
-                    'params': {}
-                  };
-                `}
-              </Script>
-              <Script
-                src="https://www.highperformanceformat.com/5cb8349e16542b4afa6dcd9e470b5d9a/invoke.js"
-                strategy="afterInteractive"
-              />
-            </div>
           </div>
         </div>
 
-        {/* Banner (728x90) — above related movies, full width */}
+        {/* Native 4:1 banner — above related movies */}
         {relatedMoviesWithImages.length > 0 && (
-          <div className="flex justify-center mb-8">
-            <Script strategy="afterInteractive">
-              {`
-                atOptions = {
-                  'key': '87ab4027f73db069de8b89cf3e5b854a',
-                  'format': 'iframe',
-                  'height': 90,
-                  'width': 728,
-                  'params': {}
-                };
-              `}
-            </Script>
-            <Script
-              src="https://www.highperformanceformat.com/87ab4027f73db069de8b89cf3e5b854a/invoke.js"
-              strategy="afterInteractive"
-            />
+          <div className="w-full mb-8">
+            <div id="container-aadc53e5aa579316a6819840d149ca4b" />
           </div>
         )}
 
