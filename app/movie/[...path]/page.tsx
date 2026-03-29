@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { getMovieDetails, getNavLinks, searchMovies } from "@/lib/api"
 import { Header } from "@/components/header"
 import { MovieCard } from "@/components/movie-card"
@@ -9,6 +10,49 @@ import { Button } from "@/components/ui/button"
 import Script from "next/script"
 
 const BASE_URL = "https://api.filmbase.fun"
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { path: string[] }
+}): Promise<Metadata> {
+  const moviePath = params.path.join("/")
+  const movie = await getMovieDetails(moviePath)
+
+  let imageUrl = ""
+  try {
+    const searchResult = await searchMovies(movie.title, 1)
+    const match =
+      searchResult.items.find(
+        (item) =>
+          item.title.toLowerCase() === movie.title.toLowerCase() ||
+          item.path === movie.path
+      ) || searchResult.items[0]
+
+    if (match?.imageUrl) {
+      imageUrl = match.imageUrl.startsWith("http")
+        ? match.imageUrl
+        : `${BASE_URL}/api/image${match.imageUrl}`
+    }
+  } catch {}
+
+  return {
+    title: `${movie.title} - FilmBase`,
+    description: movie.synopsis?.slice(0, 160) || `Download ${movie.title} on FilmBase`,
+    openGraph: {
+      title: movie.title,
+      description: movie.synopsis?.slice(0, 160) || "",
+      images: imageUrl ? [{ url: imageUrl }] : [],
+      type: "video.movie",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: movie.title,
+      description: movie.synopsis?.slice(0, 160) || "",
+      images: imageUrl ? [imageUrl] : [],
+    },
+  }
+}
 
 export default async function MoviePage({
   params,
@@ -118,7 +162,7 @@ export default async function MoviePage({
         {/* Native 4:1 banner — above related movies */}
         {relatedMoviesWithImages.length > 0 && (
           <div className="w-full mb-8">
-            <div id="container-aadc53e5aa579316a6819840d149ca4b" />
+            <div id="container-aadc53e5aa579316a6819840d149ca4b-2" />
           </div>
         )}
 
