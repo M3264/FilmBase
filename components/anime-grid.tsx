@@ -93,12 +93,12 @@ export function AnimeGrid() {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
               {items.map((anime, index) => {
                 const animeId = anime.anime_session ?? anime.anime_id
-                // snapshot is already a proxied relative URL from the API
                 const imgSrc = anime.snapshot
                   ? anime.snapshot.startsWith("/")
-                    ? anime.snapshot
-                    : `/api/anime/image-proxy?url=${encodeURIComponent(anime.snapshot)}`
+                    ? `https://api.filmbase.fun${anime.snapshot}`
+                    : `https://api.filmbase.fun/api/anime/image-proxy?url=${encodeURIComponent(anime.snapshot)}`
                   : null
+
 
                 return (
                   <Link
