@@ -141,8 +141,8 @@ export default async function HomePage() {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {animeItems.map((anime: any, index: number) => (
                 <Link
-                  key={`${anime.anime_id ?? anime.session}-${index}`}
-                  href={`/anime/${encodeURIComponent(anime_session ?? anime.anime_id)}`}
+                  key={`${anime.anime_session ?? anime.anime_id}-${index}`}
+                  href={`/anime/${encodeURIComponent(anime.anime_session ?? anime.anime_id)}`}
                   className="group block"
                 >
                   <div className="relative aspect-video overflow-hidden rounded-lg bg-secondary mb-2">
