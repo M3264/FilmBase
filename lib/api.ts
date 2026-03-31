@@ -1,5 +1,7 @@
 const BASE_URL = "https://api.filmbase.fun"
 
+// ── MOVIES ────────────────────────────────────────────────────
+
 export interface NavLinks {
   genres: Array<{ name: string; path: string }>
   categories: Array<{
@@ -111,5 +113,97 @@ export async function resolveDownloadLink(intermediateUrl: string): Promise<{
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ intermediateUrl }),
   })
+  return await res.json()
+}
+
+// ── ANIME ─────────────────────────────────────────────────────
+
+export interface AnimeItem {
+  anime_title: string
+  snapshot: string
+  [key: string]: unknown
+}
+
+export interface AnimeAiringResult {
+  data: AnimeItem[]
+  [key: string]: unknown
+}
+
+export interface AnimeHomepage {
+  status: string
+  data: {
+    airing: AnimeAiringResult
+  }
+}
+
+export interface AnimeSource {
+  url: string
+  quality: string
+  fansub: string
+  audio: string
+  isM3U8: boolean
+  m3u8_url: string
+  file_name: string
+  headers: Record<string, string>
+  downloadUrl: string | null
+}
+
+export interface AnimeEpisodeInfo {
+  session_id: string
+  anime_id: string
+  anime_title: string
+  episode_number: number
+  full_title: string
+  episode_title: string
+  episode_url: string
+}
+
+export interface AnimeSourcesResult {
+  sources: AnimeSource[]
+  download: unknown[]
+  episode_info: AnimeEpisodeInfo
+  processedDownloads: unknown[]
+}
+
+export async function getAnimeHomepage(proxied = false): Promise<AnimeHomepage> {
+  const endpoint = proxied ? "homepage-proxied" : "homepage"
+  const res = await fetch(`${BASE_URL}/api/anime/${endpoint}`, { cache: "no-store" })
+  return await res.json()
+}
+
+export async function getAiringAnime(page = 1, proxied = false): Promise<AnimeAiringResult> {
+  const endpoint = proxied ? "airing-proxied" : "airing"
+  const res = await fetch(`${BASE_URL}/api/anime/${endpoint}?page=${page}`, { cache: "no-store" })
+  return await res.json()
+}
+
+export async function searchAnime(query: string): Promise<unknown> {
+  const res = await fetch(`${BASE_URL}/api/anime/search/${encodeURIComponent(query)}`, { cache: "no-store" })
+  return await res.json()
+}
+
+export async function getAnimeInfo(animeId: string): Promise<unknown> {
+  const res = await fetch(`${BASE_URL}/api/anime/info/${encodeURIComponent(animeId)}`, { cache: "no-store" })
+  return await res.json()
+}
+
+export async function getAnimeEpisodes(animeId: string): Promise<unknown> {
+  const res = await fetch(`${BASE_URL}/api/anime/episodes/${encodeURIComponent(animeId)}`, { cache: "no-store" })
+  return await res.json()
+}
+
+export async function getAnimeEpisodeSources(animeId: string, ep: number): Promise<AnimeSourcesResult> {
+  const res = await fetch(
+    `${BASE_URL}/api/anime/sources/${encodeURIComponent(animeId)}?ep=${ep}`,
+    { cache: "no-store" }
+  )
+  return await res.json()
+}
+
+export async function getAnimeDirectUrl(paheUrl: string): Promise<unknown> {
+  const res = await fetch(
+    `${BASE_URL}/api/anime/direct?paheUrl=${encodeURIComponent(paheUrl)}`,
+    { cache: "no-store" }
+  )
   return await res.json()
 }
