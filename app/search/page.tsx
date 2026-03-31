@@ -6,6 +6,9 @@ import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 
+const PROXY = "https://api.filmbase.fun/api/anime/image-proxy?url="
+const proxyImage = (url?: string) => url ? `${PROXY}${encodeURIComponent(url)}` : null
+
 export default async function SearchPage({
   searchParams,
 }: {
@@ -24,9 +27,7 @@ export default async function SearchPage({
         <main className="container mx-auto px-4 pt-24 pb-12">
           <div className="text-center py-20">
             <h1 className="text-3xl font-bold tracking-tight mb-4">Search</h1>
-            <p className="text-lg text-muted-foreground mb-8">
-              Enter a search term to find movies, TV series, and anime
-            </p>
+            <p className="text-lg text-muted-foreground mb-8">Enter a search term to find movies, TV series, and anime</p>
             <Link href="/"><Button>Go Home</Button></Link>
           </div>
         </main>
@@ -40,7 +41,10 @@ export default async function SearchPage({
     searchAnime(query).catch(() => null),
   ])
 
-  const animeItems: any[] = (animeResults as any)?.data ?? []
+  // search returns array directly
+  const animeItems: any[] = Array.isArray(animeResults)
+    ? animeResults
+    : (animeResults as any)?.data ?? []
 
   return (
     <div className="min-h-screen">
@@ -57,9 +61,7 @@ export default async function SearchPage({
             <Link
               href={`/search?q=${encodeURIComponent(query)}&tab=movies`}
               className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${
-                tab === "movies"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-secondary hover:bg-secondary/80"
+                tab === "movies" ? "bg-primary text-primary-foreground" : "bg-secondary hover:bg-secondary/80"
               }`}
             >
               Movies {movieResults ? `(${movieResults.items.length})` : ""}
@@ -67,9 +69,7 @@ export default async function SearchPage({
             <Link
               href={`/search?q=${encodeURIComponent(query)}&tab=anime`}
               className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${
-                tab === "anime"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-secondary hover:bg-secondary/80"
+                tab === "anime" ? "bg-primary text-primary-foreground" : "bg-secondary hover:bg-secondary/80"
               }`}
             >
               Anime {animeItems.length > 0 ? `(${animeItems.length})` : ""}
@@ -82,9 +82,7 @@ export default async function SearchPage({
           <>
             {movieResults && movieResults.items.length > 0 ? (
               <>
-                <p className="text-muted-foreground mb-6">
-                  Page {movieResults.currentPage} of {movieResults.totalPages}
-                </p>
+                <p className="text-muted-foreground mb-6">Page {movieResults.currentPage} of {movieResults.totalPages}</p>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                   {movieResults.items.map((movie, index) => (
                     <MovieCard key={`${movie.path}-${index}`} movie={movie} />
@@ -97,9 +95,7 @@ export default async function SearchPage({
                         <Button variant="outline">Previous</Button>
                       </Link>
                     )}
-                    <span className="text-sm text-muted-foreground">
-                      Page {page} of {movieResults.totalPages}
-                    </span>
+                    <span className="text-sm text-muted-foreground">Page {page} of {movieResults.totalPages}</span>
                     {page < movieResults.totalPages && (
                       <Link href={`/search?q=${encodeURIComponent(query)}&page=${page + 1}&tab=movies`}>
                         <Button variant="outline">Next</Button>
@@ -124,34 +120,33 @@ export default async function SearchPage({
           <>
             {animeItems.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                {animeItems.map((anime: any, index: number) => (
-                  <Link
-                    key={`${anime.id ?? anime.session}-${index}`}
-                    href={`/anime/${encodeURIComponent(anime.id ?? anime.session)}`}
-                    className="group block"
-                  >
-                    <div className="relative aspect-[2/3] overflow-hidden rounded-lg bg-secondary mb-2">
-                      {anime.poster ?? anime.image ? (
-                        <Image
-                          src={anime.poster ?? anime.image}
-                          alt={anime.title ?? "Anime"}
-                          fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
-                          No Image
-                        </div>
-                      )}
-                    </div>
-                    <p className="text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">
-                      {anime.title}
-                    </p>
-                    {anime.episodes && (
-                      <p className="text-xs text-muted-foreground mt-0.5">{anime.episodes} eps</p>
-                    )}
-                  </Link>
-                ))}
+                {animeItems.map((anime: any, index: number) => {
+                  const img = proxyImage(anime.image)
+                  return (
+                    <Link
+                      key={`${anime.id}-${index}`}
+                      href={`/anime/${encodeURIComponent(anime.id)}`}
+                      className="group block"
+                    >
+                      <div className="relative aspect-[2/3] overflow-hidden rounded-lg bg-secondary mb-2">
+                        {img ? (
+                          <Image
+                            src={img}
+                            alt={anime.title ?? "Anime"}
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">No Image</div>
+                        )}
+                      </div>
+                      <p className="text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">{anime.title}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {anime.type}{anime.release_date ? ` · ${anime.release_date}` : ""}
+                      </p>
+                    </Link>
+                  )
+                })}
               </div>
             ) : (
               <div className="text-center py-20">

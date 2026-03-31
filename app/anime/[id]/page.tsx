@@ -6,30 +6,28 @@ import Image from "next/image"
 import Link from "next/link"
 import Script from "next/script"
 
-const BASE_URL = "https://api.filmbase.fun"
+const PROXY = "https://api.filmbase.fun/api/anime/image-proxy?url="
+const proxyImage = (url?: string) => url ? `${PROXY}${encodeURIComponent(url)}` : null
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { id: string }
-}): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   try {
     const anime = await getAnimeInfo(params.id) as any
     const info = anime?.data ?? anime
+    const img = proxyImage(info?.cover ?? info?.poster)
     return {
       title: `${info?.title ?? "Anime"} - FilmBase`,
       description: info?.synopsis?.slice(0, 160) ?? `Watch ${info?.title} on FilmBase`,
       openGraph: {
         title: info?.title ?? "Anime",
         description: info?.synopsis?.slice(0, 160) ?? "",
-        images: info?.cover ? [{ url: info.cover }] : [],
+        images: img ? [{ url: img }] : [],
         type: "video.tv_show",
       },
       twitter: {
         card: "summary_large_image",
         title: info?.title ?? "Anime",
         description: info?.synopsis?.slice(0, 160) ?? "",
-        images: info?.cover ? [info.cover] : [],
+        images: img ? [img] : [],
       },
     }
   } catch {
@@ -37,11 +35,7 @@ export async function generateMetadata({
   }
 }
 
-export default async function AnimeDetailPage({
-  params,
-}: {
-  params: { id: string }
-}) {
+export default async function AnimeDetailPage({ params }: { params: { id: string } }) {
   const [navLinks, animeRaw, episodesRaw] = await Promise.all([
     getNavLinks(),
     getAnimeInfo(params.id).catch(() => null),
@@ -64,64 +58,40 @@ export default async function AnimeDetailPage({
     )
   }
 
+  const coverImg = proxyImage(anime.cover ?? anime.poster)
+
   return (
     <div className="min-h-screen">
-      <Script
-        src="https://pl28996782.profitablecpmratenetwork.com/8b/15/bd/8b15bd93ad7b847fc91e7aeb8cf99c94.js"
-        strategy="afterInteractive"
-      />
-      <Script
-        async
-        data-cfasync="false"
-        src="https://pl28996783.profitablecpmratenetwork.com/aadc53e5aa579316a6819840d149ca4b/invoke.js"
-        strategy="afterInteractive"
-      />
+      <Script src="https://pl28996782.profitablecpmratenetwork.com/8b/15/bd/8b15bd93ad7b847fc91e7aeb8cf99c94.js" strategy="afterInteractive" />
+      <Script async data-cfasync="false" src="https://pl28996783.profitablecpmratenetwork.com/aadc53e5aa579316a6819840d149ca4b/invoke.js" strategy="afterInteractive" />
 
       <Header navLinks={navLinks} />
 
       <main className="container mx-auto px-4 pt-24 pb-12">
-        {/* Info grid */}
         <div className="grid md:grid-cols-[280px_1fr] gap-8 mb-12">
-          {anime.cover && (
+          {coverImg && (
             <div className="relative aspect-[2/3] overflow-hidden rounded-lg bg-secondary">
-              <Image src={anime.cover} alt={anime.title ?? "Anime"} fill className="object-cover" priority />
+              <Image src={coverImg} alt={anime.title ?? "Anime"} fill className="object-cover" priority />
             </div>
           )}
 
           <div className="space-y-4">
             <h1 className="text-4xl font-bold tracking-tight">{anime.title}</h1>
-
-            {anime.status && (
-              <p className="text-sm text-muted-foreground">
-                Status: <span className="text-foreground font-medium">{anime.status}</span>
-              </p>
-            )}
-            {anime.season && (
-              <p className="text-sm text-muted-foreground">
-                Season: <span className="text-foreground font-medium">{anime.season}</span>
-              </p>
-            )}
-            {anime.episodes_count && (
-              <p className="text-sm text-muted-foreground">
-                Episodes: <span className="text-foreground font-medium">{anime.episodes_count}</span>
-              </p>
-            )}
-
+            {anime.status && <p className="text-sm text-muted-foreground">Status: <span className="text-foreground font-medium">{anime.status}</span></p>}
+            {anime.season && <p className="text-sm text-muted-foreground">Season: <span className="text-foreground font-medium">{anime.season}</span></p>}
+            {anime.episodes_count && <p className="text-sm text-muted-foreground">Episodes: <span className="text-foreground font-medium">{anime.episodes_count}</span></p>}
             {anime.synopsis && (
               <div>
                 <h2 className="text-lg font-semibold mb-1">Synopsis</h2>
                 <p className="text-muted-foreground leading-relaxed">{anime.synopsis}</p>
               </div>
             )}
-
-            {/* Ad banner */}
             <div className="w-full">
               <div id="container-aadc53e5aa579316a6819840d149ca4b" />
             </div>
           </div>
         </div>
 
-        {/* Episodes list */}
         {episodes.length > 0 && (
           <section>
             <h2 className="text-2xl font-bold tracking-tight mb-4">Episodes</h2>
@@ -139,7 +109,6 @@ export default async function AnimeDetailPage({
           </section>
         )}
 
-        {/* Ad banner */}
         <div className="w-full mt-12">
           <div id="container-aadc53e5aa579316a6819840d149ca4b-2" />
         </div>
