@@ -142,7 +142,7 @@ export default async function HomePage() {
               {animeItems.map((anime: any, index: number) => (
                 <Link
                   key={`${anime.anime_id ?? anime.session}-${index}`}
-                  href={`/anime/${encodeURIComponent(anime.anime_id ?? anime.session)}`}
+                  href={`/anime/${encodeURIComponent(anime_session ?? anime.anime_id)}`}
                   className="group block"
                 >
                   <div className="relative aspect-video overflow-hidden rounded-lg bg-secondary mb-2">
