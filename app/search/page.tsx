@@ -1,17 +1,19 @@
-import { searchMovies, getNavLinks } from "@/lib/api"
+import { searchMovies, getNavLinks, searchAnime } from "@/lib/api"
 import { Header } from "@/components/header"
 import { MovieCard } from "@/components/movie-card"
 import { Footer } from "@/components/footer"
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 
 export default async function SearchPage({
   searchParams,
 }: {
-  searchParams: { q?: string; page?: string }
+  searchParams: { q?: string; page?: string; tab?: string }
 }) {
   const query = searchParams.q || ""
   const page = Number.parseInt(searchParams.page || "1")
+  const tab = searchParams.tab || "movies"
 
   const navLinks = await getNavLinks()
 
@@ -19,107 +21,151 @@ export default async function SearchPage({
     return (
       <div className="min-h-screen">
         <Header navLinks={navLinks} />
-
         <main className="container mx-auto px-4 pt-24 pb-12">
           <div className="text-center py-20">
             <h1 className="text-3xl font-bold tracking-tight mb-4">Search</h1>
             <p className="text-lg text-muted-foreground mb-8">
-              Enter a search term to find movies and TV series
+              Enter a search term to find movies, TV series, and anime
             </p>
-            <Link href="/">
-              <Button>Go Home</Button>
-            </Link>
+            <Link href="/"><Button>Go Home</Button></Link>
           </div>
         </main>
-
         <Footer />
       </div>
     )
   }
 
-  try {
-    const results = await searchMovies(query, page)
-    
-    const cleanTitle = (title: string) => {
-      return title
-        .replace(/\s*-\s*nkiri\s*/gi, "")
-        .replace(/\s*nkiri\s*/gi, "")
-        .replace(/\s+archives\s*/gi, "")
-        .trim()
-    }
+  const [movieResults, animeResults] = await Promise.all([
+    searchMovies(query, page).catch(() => null),
+    searchAnime(query).catch(() => null),
+  ])
 
-    return (
-      <div className="min-h-screen">
-        <Header navLinks={navLinks} />
+  const animeItems: any[] = (animeResults as any)?.data ?? []
 
-        <main className="container mx-auto px-4 pt-24 pb-12">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold tracking-tight mb-2">Search Results for "{query}"</h1>
-            <p className="text-muted-foreground">
-              Found {results.items.length} results (Page {results.currentPage} of {results.totalPages})
-            </p>
+  return (
+    <div className="min-h-screen">
+      <Header navLinks={navLinks} />
+
+      <main className="container mx-auto px-4 pt-24 pb-12">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold tracking-tight mb-4">
+            Search Results for &quot;{query}&quot;
+          </h1>
+
+          {/* Tabs */}
+          <div className="flex gap-2">
+            <Link
+              href={`/search?q=${encodeURIComponent(query)}&tab=movies`}
+              className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${
+                tab === "movies"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary hover:bg-secondary/80"
+              }`}
+            >
+              Movies {movieResults ? `(${movieResults.items.length})` : ""}
+            </Link>
+            <Link
+              href={`/search?q=${encodeURIComponent(query)}&tab=anime`}
+              className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${
+                tab === "anime"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary hover:bg-secondary/80"
+              }`}
+            >
+              Anime {animeItems.length > 0 ? `(${animeItems.length})` : ""}
+            </Link>
           </div>
+        </div>
 
-          {results.items.length > 0 ? (
-            <>
+        {/* Movies tab */}
+        {tab === "movies" && (
+          <>
+            {movieResults && movieResults.items.length > 0 ? (
+              <>
+                <p className="text-muted-foreground mb-6">
+                  Page {movieResults.currentPage} of {movieResults.totalPages}
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                  {movieResults.items.map((movie, index) => (
+                    <MovieCard key={`${movie.path}-${index}`} movie={movie} />
+                  ))}
+                </div>
+                {movieResults.totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-4 mt-12">
+                    {page > 1 && (
+                      <Link href={`/search?q=${encodeURIComponent(query)}&page=${page - 1}&tab=movies`}>
+                        <Button variant="outline">Previous</Button>
+                      </Link>
+                    )}
+                    <span className="text-sm text-muted-foreground">
+                      Page {page} of {movieResults.totalPages}
+                    </span>
+                    {page < movieResults.totalPages && (
+                      <Link href={`/search?q=${encodeURIComponent(query)}&page=${page + 1}&tab=movies`}>
+                        <Button variant="outline">Next</Button>
+                      </Link>
+                    )}
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="text-center py-20">
+                <p className="text-muted-foreground mb-4">No movies found for &quot;{query}&quot;.</p>
+                <Link href={`/search?q=${encodeURIComponent(query)}&tab=anime`}>
+                  <Button variant="outline">Try Anime results</Button>
+                </Link>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Anime tab */}
+        {tab === "anime" && (
+          <>
+            {animeItems.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                {results.items.map((movie, index) => (
-                  <MovieCard key={`${movie.path}-${index}`} movie={movie} />
+                {animeItems.map((anime: any, index: number) => (
+                  <Link
+                    key={`${anime.id ?? anime.session}-${index}`}
+                    href={`/anime/${encodeURIComponent(anime.id ?? anime.session)}`}
+                    className="group block"
+                  >
+                    <div className="relative aspect-[2/3] overflow-hidden rounded-lg bg-secondary mb-2">
+                      {anime.poster ?? anime.image ? (
+                        <Image
+                          src={anime.poster ?? anime.image}
+                          alt={anime.title ?? "Anime"}
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
+                          No Image
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">
+                      {anime.title}
+                    </p>
+                    {anime.episodes && (
+                      <p className="text-xs text-muted-foreground mt-0.5">{anime.episodes} eps</p>
+                    )}
+                  </Link>
                 ))}
               </div>
+            ) : (
+              <div className="text-center py-20">
+                <p className="text-muted-foreground mb-4">No anime found for &quot;{query}&quot;.</p>
+                <Link href={`/search?q=${encodeURIComponent(query)}&tab=movies`}>
+                  <Button variant="outline">Try Movie results</Button>
+                </Link>
+              </div>
+            )}
+          </>
+        )}
+      </main>
 
-              {results.totalPages > 1 && (
-                <div className="flex items-center justify-center gap-4 mt-12">
-                  {page > 1 && (
-                    <Link href={`/search?q=${encodeURIComponent(query)}&page=${page - 1}`}>
-                      <Button variant="outline">Previous</Button>
-                    </Link>
-                  )}
-                  <span className="text-sm text-muted-foreground">
-                    Page {page} of {results.totalPages}
-                  </span>
-                  {page < results.totalPages && (
-                    <Link href={`/search?q=${encodeURIComponent(query)}&page=${page + 1}`}>
-                      <Button variant="outline">Next</Button>
-                    </Link>
-                  )}
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="text-center py-20">
-              <p className="text-lg text-muted-foreground mb-8">No results found for your search.</p>
-              <Link href="/">
-                <Button>Go Home</Button>
-              </Link>
-            </div>
-          )}
-        </main>
-
-        <Footer />
-      </div>
-    )
-  } catch (error) {
-    console.error("Search error:", error)
-    
-    return (
-      <div className="min-h-screen">
-        <Header navLinks={navLinks} />
-
-        <main className="container mx-auto px-4 pt-24 pb-12">
-          <div className="text-center py-20">
-            <h1 className="text-3xl font-bold tracking-tight mb-4">Search Error</h1>
-            <p className="text-lg text-muted-foreground mb-8">
-              There was an error processing your search. Please try again.
-            </p>
-            <Link href="/">
-              <Button>Go Home</Button>
-            </Link>
-          </div>
-        </main>
-
-        <Footer />
-      </div>
-    )
-  }
+      <Footer />
+    </div>
+  )
 }
