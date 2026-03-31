@@ -43,7 +43,12 @@ export default async function AnimeDetailPage({ params }: { params: { id: string
   ])
 
   const anime = (animeRaw as any)?.data ?? animeRaw as any
-  const episodes: any[] = (episodesRaw as any)?.data ?? (episodesRaw as any)?.episodes ?? []
+
+  // Support both shapes: { episodes: [...] } or { data: [...] }
+  const episodesData: any[] =
+    (episodesRaw as any)?.episodes ??
+    (episodesRaw as any)?.data ??
+    []
 
   if (!anime) {
     return (
@@ -77,9 +82,21 @@ export default async function AnimeDetailPage({ params }: { params: { id: string
 
           <div className="space-y-4">
             <h1 className="text-4xl font-bold tracking-tight">{anime.title}</h1>
-            {anime.status && <p className="text-sm text-muted-foreground">Status: <span className="text-foreground font-medium">{anime.status}</span></p>}
-            {anime.season && <p className="text-sm text-muted-foreground">Season: <span className="text-foreground font-medium">{anime.season}</span></p>}
-            {anime.episodes_count && <p className="text-sm text-muted-foreground">Episodes: <span className="text-foreground font-medium">{anime.episodes_count}</span></p>}
+            {anime.status && (
+              <p className="text-sm text-muted-foreground">
+                Status: <span className="text-foreground font-medium">{anime.status}</span>
+              </p>
+            )}
+            {anime.season && (
+              <p className="text-sm text-muted-foreground">
+                Season: <span className="text-foreground font-medium">{anime.season}</span>
+              </p>
+            )}
+            {anime.episodes_count && (
+              <p className="text-sm text-muted-foreground">
+                Episodes: <span className="text-foreground font-medium">{anime.episodes_count}</span>
+              </p>
+            )}
             {anime.synopsis && (
               <div>
                 <h2 className="text-lg font-semibold mb-1">Synopsis</h2>
@@ -92,19 +109,35 @@ export default async function AnimeDetailPage({ params }: { params: { id: string
           </div>
         </div>
 
-        {episodes.length > 0 && (
+        {episodesData.length > 0 && (
           <section>
             <h2 className="text-2xl font-bold tracking-tight mb-4">Episodes</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-              {episodes.map((ep: any, i: number) => (
-                <Link
-                  key={ep.session ?? i}
-                  href={`/anime/${encodeURIComponent(params.id)}/episode/${ep.episode ?? i + 1}`}
-                  className="flex items-center justify-center px-4 py-3 bg-secondary hover:bg-primary hover:text-primary-foreground rounded-lg text-sm font-medium transition-colors"
-                >
-                  Ep. {ep.episode ?? i + 1}
-                </Link>
-              ))}
+              {episodesData.map((ep: any) => {
+                /*
+                 * ep.id looks like:
+                 *   "ba42bb01-2bbc-ab83-681c-a094054f4f79/835c486e..."
+                 *
+                 * We split on "/" to get the session part after the anime_id prefix,
+                 * then build the route as /anime/<animeId>/episode/<sessionHash>
+                 * so the episode page can use it to fetch the actual stream.
+                 *
+                 * ep.number is the real episode number (e.g. 25, 26, 27…)
+                 * and is used as the display label — NOT a sequential index.
+                 */
+                const [, sessionHash] = (ep.id as string).split("/")
+                const epHref = `/anime/${encodeURIComponent(params.id)}/episode/${encodeURIComponent(sessionHash)}`
+
+                return (
+                  <Link
+                    key={ep.id}
+                    href={epHref}
+                    className="flex items-center justify-center px-4 py-3 bg-secondary hover:bg-primary hover:text-primary-foreground rounded-lg text-sm font-medium transition-colors"
+                  >
+                    Ep. {ep.number}
+                  </Link>
+                )
+              })}
             </div>
           </section>
         )}
