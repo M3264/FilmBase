@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { getNavLinks, getAnimeHomepage } from "@/lib/api"
+import { getNavLinks, getAiringAnime } from "@/lib/api"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import Image from "next/image"
@@ -11,16 +11,15 @@ import Script from "next/script"
 const PROXY = "https://api.filmbase.fun/api/anime/image-proxy?url="
 const proxyImage = (url?: string) => url ? `${PROXY}${encodeURIComponent(url)}` : null
 
-const PAGES_PER_GROUP = 3 // number of API pages fetched per "group"
+const PAGES_PER_GROUP = 3
 
 export default function AnimePage() {
   const [navLinks, setNavLinks] = useState<any[]>([])
   const [sections, setSections] = useState<{ page: number; items: any[] }[]>([])
-  const [groupStart, setGroupStart] = useState(1) // first page of the current 3-page group
+  const [groupStart, setGroupStart] = useState(1)
   const [lastPage, setLastPage] = useState<number | null>(null)
   const [loading, setLoading] = useState(false)
 
-  // Fetch nav links once
   useEffect(() => {
     getNavLinks().then(setNavLinks).catch(() => {})
   }, [])
@@ -31,30 +30,25 @@ export default function AnimePage() {
     try {
       const pages = [startPage, startPage + 1, startPage + 2]
       const results = await Promise.all(
-        pages.map((p) =>
-          (getAnimeHomepage as any)(p).catch(() => null)
-        )
+        pages.map((p) => getAiringAnime(p, false).catch(() => null))
       )
 
       const newSections: { page: number; items: any[] }[] = []
-      let detectedLastPage: number | null = null
 
-      for (let i = 0; i < results.length; i++) {
-        const res = results[i] as any
-        const airingData = res?.data?.airing ?? res?.airing ?? null
-        if (!airingData) continue
+      results.forEach((res, i) => {
+        const r = res as any
+        if (!r) return
 
-        if (detectedLastPage === null && airingData.last_page) {
-          detectedLastPage = airingData.last_page
+        if (r?.last_page) {
+          setLastPage(r.last_page)
         }
 
-        const items: any[] = airingData.data ?? []
+        const items: any[] = r?.data ?? []
         if (items.length > 0) {
           newSections.push({ page: pages[i], items })
         }
-      }
+      })
 
-      if (detectedLastPage !== null) setLastPage(detectedLastPage)
       setSections(newSections)
     } finally {
       setLoading(false)
@@ -63,7 +57,7 @@ export default function AnimePage() {
 
   useEffect(() => {
     fetchGroup(groupStart)
-  }, [groupStart, fetchGroup])
+  }, [groupStart]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const canPrev = groupStart > 1
   const canNext = lastPage === null || groupStart + PAGES_PER_GROUP <= lastPage
@@ -147,7 +141,6 @@ export default function AnimePage() {
           </div>
         )}
 
-        {/* Pagination controls */}
         <div className="flex items-center justify-between mt-12 gap-4">
           <button
             onClick={() => setGroupStart((s) => Math.max(1, s - PAGES_PER_GROUP))}
