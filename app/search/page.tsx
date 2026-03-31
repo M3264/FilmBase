@@ -5,6 +5,8 @@ import { Footer } from "@/components/footer"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
+import { SearchForm } from "@/components/search-form"
+import { AnimeTab } from "@/components/anime-tab"
 
 const PROXY = "https://api.filmbase.fun/api/anime/image-proxy?url="
 const proxyImage = (url?: string) => url ? `${PROXY}${encodeURIComponent(url)}` : null
@@ -27,8 +29,14 @@ export default async function SearchPage({
         <main className="container mx-auto px-4 pt-24 pb-12">
           <div className="text-center py-20">
             <h1 className="text-3xl font-bold tracking-tight mb-4">Search</h1>
-            <p className="text-lg text-muted-foreground mb-8">Enter a search term to find movies, TV series, and anime</p>
-            <Link href="/"><Button>Go Home</Button></Link>
+            <p className="text-lg text-muted-foreground mb-8">
+              Enter a search term to find movies, TV series, and anime
+            </p>
+            {/* Search box visible on empty state */}
+            <div className="max-w-md mx-auto mb-6">
+              <SearchForm />
+            </div>
+            <Link href="/"><Button variant="ghost">Go Home</Button></Link>
           </div>
         </main>
         <Footer />
@@ -41,7 +49,6 @@ export default async function SearchPage({
     searchAnime(query).catch(() => null),
   ])
 
-  // search returns array directly
   const animeItems: any[] = Array.isArray(animeResults)
     ? animeResults
     : (animeResults as any)?.data ?? []
@@ -56,7 +63,7 @@ export default async function SearchPage({
             Search Results for &quot;{query}&quot;
           </h1>
 
-          {/* Tabs */}
+          {/* Tabs — Anime tab is a client component with loading state */}
           <div className="flex gap-2">
             <Link
               href={`/search?q=${encodeURIComponent(query)}&tab=movies`}
@@ -66,14 +73,11 @@ export default async function SearchPage({
             >
               Movies {movieResults ? `(${movieResults.items.length})` : ""}
             </Link>
-            <Link
-              href={`/search?q=${encodeURIComponent(query)}&tab=anime`}
-              className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${
-                tab === "anime" ? "bg-primary text-primary-foreground" : "bg-secondary hover:bg-secondary/80"
-              }`}
-            >
-              Anime {animeItems.length > 0 ? `(${animeItems.length})` : ""}
-            </Link>
+            <AnimeTab
+              query={query}
+              isActive={tab === "anime"}
+              count={animeItems.length}
+            />
           </div>
         </div>
 
@@ -82,7 +86,9 @@ export default async function SearchPage({
           <>
             {movieResults && movieResults.items.length > 0 ? (
               <>
-                <p className="text-muted-foreground mb-6">Page {movieResults.currentPage} of {movieResults.totalPages}</p>
+                <p className="text-muted-foreground mb-6">
+                  Page {movieResults.currentPage} of {movieResults.totalPages}
+                </p>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                   {movieResults.items.map((movie, index) => (
                     <MovieCard key={`${movie.path}-${index}`} movie={movie} />
@@ -95,7 +101,9 @@ export default async function SearchPage({
                         <Button variant="outline">Previous</Button>
                       </Link>
                     )}
-                    <span className="text-sm text-muted-foreground">Page {page} of {movieResults.totalPages}</span>
+                    <span className="text-sm text-muted-foreground">
+                      Page {page} of {movieResults.totalPages}
+                    </span>
                     {page < movieResults.totalPages && (
                       <Link href={`/search?q=${encodeURIComponent(query)}&page=${page + 1}&tab=movies`}>
                         <Button variant="outline">Next</Button>
@@ -115,7 +123,7 @@ export default async function SearchPage({
           </>
         )}
 
-        {/* Anime tab */}
+        {/* Anime tab content */}
         {tab === "anime" && (
           <>
             {animeItems.length > 0 ? (
@@ -137,10 +145,14 @@ export default async function SearchPage({
                             className="object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">No Image</div>
+                          <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
+                            No Image
+                          </div>
                         )}
                       </div>
-                      <p className="text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">{anime.title}</p>
+                      <p className="text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">
+                        {anime.title}
+                      </p>
                       <p className="text-xs text-muted-foreground mt-0.5">
                         {anime.type}{anime.release_date ? ` · ${anime.release_date}` : ""}
                       </p>

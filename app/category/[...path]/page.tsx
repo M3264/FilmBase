@@ -32,10 +32,10 @@ export default async function SlugPage({ params, searchParams }: PageProps) {
   const fullPath = Array.isArray(params.slug) ? params.slug.join("/") : String(params.slug)
   const currentPage = Number(searchParams?.page) || 1
 
-  const isTagPage = typeof fullPath === 'string' && fullPath.startsWith("tag/")
+  const isCatPage = typeof fullPath === 'string' && fullPath.startsWith("category/")
 
   try {
-    if (isTagPage) {
+    if (isCatPage) {
       const genreData = await getGenreMovies(fullPath, currentPage)
       const cleanedTitle = cleanTitle(genreData.listTitle)
 

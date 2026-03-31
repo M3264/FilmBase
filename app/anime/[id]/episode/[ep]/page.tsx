@@ -61,7 +61,6 @@ export default async function AnimeEpisodePage({ params }: { params: { id: strin
               <a
                 key={i}
                 href={source.downloadUrl ?? source.url}
-                target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-between w-full px-5 py-4 bg-secondary hover:bg-secondary/80 rounded-lg transition-colors group"
               >

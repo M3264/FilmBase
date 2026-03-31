@@ -3,7 +3,7 @@
 import type React from "react"
 
 import Link from "next/link"
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Search, Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -22,19 +22,89 @@ interface NavLinks {
   menuPages: Array<{ name: string; path: string }>
 }
 
+interface Suggestion {
+  title: string
+  path: string
+  image?: string
+}
+
 export function Header({ navLinks }: { navLinks: NavLinks }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false)
   const router = useRouter()
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const searchWrapperRef = useRef<HTMLDivElement>(null)
+
+  // Fetch suggestions with debounce
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+
+    if (!searchQuery.trim() || searchQuery.trim().length < 2) {
+      setSuggestions([])
+      setShowSuggestions(false)
+      return
+    }
+
+    debounceRef.current = setTimeout(async () => {
+      setIsLoadingSuggestions(true)
+      try {
+        const res = await fetch(
+          `https://api.filmbase.fun/api/search?q=${encodeURIComponent(searchQuery.trim())}&limit=6`
+        )
+        const data = await res.json()
+        // Adjust to your API response shape
+        const items: Suggestion[] = (data?.items ?? data?.results ?? []).slice(0, 6).map((item: any) => ({
+          title: item.title ?? item.name ?? "",
+          path: item.path ?? item.url ?? "",
+          image: item.poster ?? item.image ?? item.thumbnail ?? null,
+        }))
+        setSuggestions(items)
+        setShowSuggestions(items.length > 0)
+      } catch {
+        setSuggestions([])
+        setShowSuggestions(false)
+      } finally {
+        setIsLoadingSuggestions(false)
+      }
+    }, 300)
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
+  }, [searchQuery])
+
+  // Close suggestions on outside click
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (searchWrapperRef.current && !searchWrapperRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (searchQuery.trim()) {
-      router.push(`/search?q=${encodeURIComponent(searchQuery)}`)
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
       setIsSearchOpen(false)
       setSearchQuery("")
+      setSuggestions([])
+      setShowSuggestions(false)
     }
+  }
+
+  const handleSuggestionClick = (path: string) => {
+    router.push(`/${path}`)
+    setIsSearchOpen(false)
+    setSearchQuery("")
+    setSuggestions([])
+    setShowSuggestions(false)
   }
 
   // Prefer categories; fall back to menuPages if categories is empty
@@ -43,7 +113,6 @@ export function Header({ navLinks }: { navLinks: NavLinks }) {
       ? navLinks.categories
       : navLinks.menuPages.map((p) => ({ ...p, subCategories: [] }))
 
-  // Genres dropdown (may be empty)
   const hasGenres = navLinks.genres.length > 0
 
   return (
@@ -66,7 +135,6 @@ export function Header({ navLinks }: { navLinks: NavLinks }) {
               </Link>
             ))}
 
-            {/* Genres dropdown — only shown when genres exist */}
             {hasGenres && (
               <div className="relative group">
                 <button className="text-sm text-muted-foreground hover:text-foreground transition-colors">
@@ -94,7 +162,14 @@ export function Header({ navLinks }: { navLinks: NavLinks }) {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setIsSearchOpen(!isSearchOpen)}
+              onClick={() => {
+                setIsSearchOpen(!isSearchOpen)
+                if (isSearchOpen) {
+                  setSearchQuery("")
+                  setSuggestions([])
+                  setShowSuggestions(false)
+                }
+              }}
               className="text-muted-foreground hover:text-foreground"
             >
               <Search className="h-5 w-5" />
@@ -113,16 +188,52 @@ export function Header({ navLinks }: { navLinks: NavLinks }) {
 
         {/* Search bar */}
         {isSearchOpen && (
-          <div className="pb-4">
-            <form onSubmit={handleSearch}>
-              <Input
-                type="search"
-                placeholder="Search movies, series..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full"
-                autoFocus
-              />
+          <div className="pb-4" ref={searchWrapperRef}>
+            <form onSubmit={handleSearch} className="flex gap-2">
+              <div className="relative flex-1">
+                <Input
+                  type="search"
+                  placeholder="Search movies, series, anime..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+                  className="w-full"
+                  autoFocus
+                />
+
+                {/* Suggestions dropdown */}
+                {showSuggestions && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg shadow-xl z-50 overflow-hidden">
+                    {isLoadingSuggestions ? (
+                      <div className="px-4 py-3 text-sm text-muted-foreground">Loading...</div>
+                    ) : (
+                      suggestions.map((s, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => handleSuggestionClick(s.path)}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-secondary transition-colors"
+                        >
+                          {s.image && (
+                            <img
+                              src={s.image}
+                              alt=""
+                              className="w-8 h-12 object-cover rounded flex-shrink-0"
+                            />
+                          )}
+                          <span className="text-sm font-medium line-clamp-1">{s.title}</span>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Visible Enter/Search button */}
+              <Button type="submit" disabled={!searchQuery.trim()}>
+                <Search className="h-4 w-4 mr-1.5" />
+                Search
+              </Button>
             </form>
           </div>
         )}
