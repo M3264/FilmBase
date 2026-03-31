@@ -53,7 +53,7 @@ export function Header({ navLinks }: { navLinks: NavLinks }) {
       setIsLoadingSuggestions(true)
       try {
         const res = await fetch(
-          `https://api.filmbase.fun/api/search?q=${encodeURIComponent(searchQuery.trim())}&limit=6`
+          `https://api.filmbase.fun/api/search?q=${encodeURIComponent(searchQuery.trim())}`
         )
         const data = await res.json()
         // Adjust to your API response shape

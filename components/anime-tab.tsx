@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
 
@@ -10,9 +10,14 @@ interface AnimeTabProps {
   count: number
 }
 
+
 export function AnimeTab({ query, isActive, count }: AnimeTabProps) {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+
+  useEffect(() => {
+    if (isActive) setIsLoading(false)
+  }, [isActive])
 
   const handleClick = () => {
     if (isActive) return
