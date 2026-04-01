@@ -1,19 +1,8 @@
-
 import { notFound } from "next/navigation"
-import { getNavLinks, getMenuContent, getGenreMovies } from "@/lib/api"
+import { getNavLinks, getGenreMovies } from "@/lib/api"
 import { Header } from "@/components/header"
-import { MovieSection } from "@/components/movie-section"
 import { MovieCard } from "@/components/movie-card"
 import { Footer } from "@/components/footer"
-
-interface PageProps {
-  params: {
-    slug: string[]
-  }
-  searchParams: {
-    page?: string
-  }
-}
 
 function cleanTitle(title: string): string {
   return title
@@ -23,26 +12,26 @@ function cleanTitle(title: string): string {
     .trim()
 }
 
-export default async function SlugPage({ params, searchParams }: PageProps) {
+export default async function SlugPage({
+  params,
+  searchParams,
+}: {
+  params: { path: string[] }
+  searchParams: { page?: string }
+}) {
   const navLinks = await getNavLinks()
 
-  if (!params || !params.slug || params.slug.length === 0) {
+  if (!params || !params.path || params.path.length === 0) {
     notFound()
   }
 
-  const fullPath = Array.isArray(params.slug) ? params.slug.join("/") : String(params.slug)
+  const fullPath = params.path.join("/")
   const currentPage = Number(searchParams?.page) || 1
-
-  console.log("[SlugPage] fullPath:", fullPath)
-  console.log("[SlugPage] currentPage:", currentPage)
 
   try {
     const genreData = await getGenreMovies(`category/${fullPath}`, currentPage)
 
-    console.log("[SlugPage] genreData:", JSON.stringify(genreData).slice(0, 200))
-
     if (!genreData || !genreData.items) {
-      console.log("[SlugPage] no genreData, calling notFound()")
       notFound()
     }
 
