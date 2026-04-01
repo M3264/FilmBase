@@ -9,17 +9,6 @@ export default async function AnimePage() {
 
   return (
     <div className="min-h-screen">
-      <Script
-        src="https://pl28996782.profitablecpmratenetwork.com/8b/15/bd/8b15bd93ad7b847fc91e7aeb8cf99c94.js"
-        strategy="afterInteractive"
-      />
-      <Script
-        async
-        data-cfasync="false"
-        src="https://pl28996783.profitablecpmratenetwork.com/aadc53e5aa579316a6819840d149ca4b/invoke.js"
-        strategy="afterInteractive"
-      />
-
       <Header navLinks={navLinks} />
 
       <main className="container mx-auto px-4 pt-24 pb-12">

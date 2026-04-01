@@ -53,15 +53,15 @@ export function Header({ navLinks }: { navLinks: NavLinks }) {
       setIsLoadingSuggestions(true)
       try {
         const res = await fetch(
-          `https://api.filmbase.fun/api/search?q=${encodeURIComponent(searchQuery.trim())}`
-        )
-        const data = await res.json()
-        // Adjust to your API response shape
-        const items: Suggestion[] = (data?.items ?? data?.results ?? []).slice(0, 6).map((item: any) => ({
-          title: item.title ?? item.name ?? "",
-          path: item.path ?? item.url ?? "",
-          image: item.poster ?? item.image ?? item.thumbnail ?? null,
-        }))
+  `https://api.filmbase.fun/api/search?query=${encodeURIComponent(searchQuery.trim())}&page=1`
+  )
+  const data = await res.json()
+  
+  const items: Suggestion[] = (data?.data?.items ?? []).slice(0, 6).map((item: any) => ({
+  title: item.title ?? "",
+  path: item.path ?? "",
+  image: item.imageUrl ?? null,
+}))
         setSuggestions(items)
         setShowSuggestions(items.length > 0)
       } catch {
