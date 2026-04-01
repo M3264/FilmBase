@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { getAiringAnime } from "@/lib/api"
 import Image from "next/image"
 import Link from "next/link"
@@ -21,8 +22,13 @@ interface Section {
 }
 
 export function AnimeGrid() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
+  const initialGroup = Math.max(1, Number(searchParams.get("p")) || 1)
+
   const [sections, setSections] = useState<Section[]>([])
-  const [groupStart, setGroupStart] = useState(1)
+  const [groupStart, setGroupStart] = useState(initialGroup)
   const [lastPage, setLastPage] = useState<number | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -36,32 +42,35 @@ export function AnimeGrid() {
       )
 
       const newSections: Section[] = []
+      let detectedLastPage: number | null = null
 
       results.forEach((res, i) => {
         const r = res as any
         if (!r) return
-
-        // Grab last_page once
-        if (r.last_page && lastPage === null) {
-          setLastPage(r.last_page)
+        if (r.last_page && detectedLastPage === null) {
+          detectedLastPage = r.last_page
         }
-
-        // Root-level data array: { total, per_page, data: [...] }
         const items: AnimeItem[] = r.data ?? []
         if (items.length > 0) {
           newSections.push({ page: pages[i], items })
         }
       })
 
+      if (detectedLastPage !== null) setLastPage(detectedLastPage)
       setSections(newSections)
     } finally {
       setLoading(false)
     }
-  }, [lastPage])
+  }, [])
 
   useEffect(() => {
     fetchGroup(groupStart)
   }, [groupStart]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const navigate = (newStart: number) => {
+    setGroupStart(newStart)
+    router.push(`/anime?p=${newStart}`, { scroll: true })
+  }
 
   const canPrev = groupStart > 1
   const canNext = lastPage === null || groupStart + PAGES_PER_GROUP <= lastPage
@@ -98,7 +107,6 @@ export function AnimeGrid() {
                     ? `https://api.filmbase.fun${anime.snapshot}`
                     : `https://api.filmbase.fun/api/anime/image-proxy?url=${encodeURIComponent(anime.snapshot)}`
                   : null
-
 
                 return (
                   <Link
@@ -137,7 +145,7 @@ export function AnimeGrid() {
 
       <div className="flex items-center justify-between mt-12 gap-4">
         <button
-          onClick={() => setGroupStart((s) => Math.max(1, s - PAGES_PER_GROUP))}
+          onClick={() => navigate(Math.max(1, groupStart - PAGES_PER_GROUP))}
           disabled={!canPrev || loading}
           className="px-6 py-2 rounded-lg bg-secondary hover:bg-primary hover:text-primary-foreground disabled:opacity-40 disabled:cursor-not-allowed font-medium transition-colors"
         >
@@ -150,7 +158,7 @@ export function AnimeGrid() {
         </span>
 
         <button
-          onClick={() => setGroupStart((s) => s + PAGES_PER_GROUP)}
+          onClick={() => navigate(groupStart + PAGES_PER_GROUP)}
           disabled={!canNext || loading}
           className="px-6 py-2 rounded-lg bg-secondary hover:bg-primary hover:text-primary-foreground disabled:opacity-40 disabled:cursor-not-allowed font-medium transition-colors"
         >
