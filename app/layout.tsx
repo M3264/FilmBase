@@ -30,21 +30,29 @@ export default function RootLayout({
         </ThemeProvider>
 
         <Analytics />
-       
+
         <Script
           src="https://quge5.com/88/tag.min.js"
           data-zone="223721"
           data-cfasync="false"
           strategy="beforeInteractive"
         />
+
         <Script
           src="https://scripts.simpleanalyticscdn.com/latest.js"
           strategy="afterInteractive"
         />
+
         <Script
           src="https://personal-umami.luvhuj.easypanel.host/script.js"
           data-website-id="58a28357-d9a1-42df-88d8-cc9b8332dce2"
           strategy="afterInteractive"
+        />
+
+        <Script
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5635313643679003"
+          strategy="afterInteractive"
+          crossOrigin="anonymous"
         />
       </body>
     </html>
