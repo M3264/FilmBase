@@ -100,7 +100,7 @@ export function Header({ navLinks }: { navLinks: NavLinks }) {
   }
 
   const handleSuggestionClick = (path: string) => {
-    router.push(`/${path}`)
+    router.push(`/movie/${path}`)
     setIsSearchOpen(false)
     setSearchQuery("")
     setSuggestions([])
