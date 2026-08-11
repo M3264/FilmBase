@@ -1,59 +1,46 @@
 import Link from "next/link"
 import Image from "next/image"
+import type { CSSProperties } from "react"
 import type { MovieItem } from "@/lib/api"
+import { displayTitle, publicMoviePath } from "@/lib/presentation"
+import { publicImageUrl } from "@/lib/presentation-images"
 
-const BASE_URL = "https://api.filmbase.fun"
+function normalizeImage(source?: string) {
+  if (!source) return null
+  return source
+}
 
-export function MovieCard({ movie }: { movie: MovieItem }) {
-  let imageUrl = null
-
-  if (movie.imageUrl) {
-    if (movie.imageUrl.startsWith('http')) {
-      try {
-        const u = new URL(movie.imageUrl)
-
-        if (
-          u.hostname === 'thenkiri.ng' &&
-          u.pathname.startsWith('/wp-content/')
-        ) {
-          imageUrl = `${BASE_URL}/api/image${u.pathname}`
-        } else {
-          imageUrl = movie.imageUrl
-        }
-      } catch {
-        imageUrl = movie.imageUrl
-      }
-    } else if (movie.imageUrl.startsWith('/wp-content/')) {
-      imageUrl = `${BASE_URL}/api/image${movie.imageUrl}`
-    } else {
-      imageUrl = movie.imageUrl
-    }
-  }
-
+export function MovieCard({ movie, compact = false, index }: { movie: MovieItem; compact?: boolean; index?: number }) {
+  const imageUrl = publicImageUrl(normalizeImage(movie.imageUrl))
+  const title = displayTitle(movie.title)
+  const href = movie.path.startsWith("__anime/") ? `/anime/${movie.path.slice("__anime/".length)}` : `/movie/${publicMoviePath(movie.path)}`
+  const catalogueNumber = String((index ?? 0) + 1).padStart(2, "0")
+  const primaryLabel = movie.categories?.[0] || "FilmBase selection"
+  if (compact) return (
+    <Link href={href} className="group grid min-h-16 grid-cols-[2.5rem_minmax(0,1fr)_auto] items-center gap-3 border-b border-border px-1 py-3 outline-none transition-colors hover:bg-secondary/60 focus-visible:bg-secondary focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:grid-cols-[3.5rem_minmax(0,1fr)_auto] sm:px-3">
+      <span className="data-type text-[10px] font-semibold text-primary sm:text-xs">FB/{catalogueNumber}</span>
+      <div className="min-w-0">
+        <h3 className="truncate text-sm font-semibold tracking-[-.01em] group-hover:text-primary sm:text-base">{title}</h3>
+        <p className="mt-1 truncate data-type text-[9px] uppercase text-muted-foreground sm:text-[10px]">{movie.date || movie.categories?.slice(0, 2).join(" / ") || "Archive title"}</p>
+      </div>
+      <span className="eyebrow border-l border-border pl-3 text-muted-foreground transition-colors group-hover:text-foreground">Playbill →</span>
+    </Link>
+  )
   return (
-    <Link href={`/movie/${movie.path}`} className="group">
-      <div className="space-y-2">
-        <div className="relative aspect-[2/3] overflow-hidden rounded-lg bg-secondary">
-          {imageUrl ? (
-            <Image
-              src={imageUrl}
-              alt={movie.title}
-              fill
-              className="object-cover transition-transform group-hover:scale-105"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-              <span className="text-sm text-center px-4">No Image</span>
-            </div>
-          )}
-        </div>
+    <Link
+      href={href}
+      className="catalog-sleeve"
+      style={{ "--tilt": `${[-1.4, 1, -.6, 1.5, -.9, .7][(index ?? 0) % 6]}deg` } as CSSProperties}
+    >
+      <span className="catalog-sleeve-number">{catalogueNumber}</span>
+      <div className="catalog-sleeve-art">
+        {imageUrl ? <Image src={imageUrl} alt={title} fill className="object-cover" sizes="(max-width: 640px) 46vw, (max-width: 1024px) 30vw, 18vw" unoptimized /> : <div className="grid h-full place-items-center p-4 text-center"><span className="data-type text-[10px] uppercase leading-5 text-muted-foreground">FilmBase<br />Artwork pending</span></div>}
+      </div>
+      <div className="catalog-sleeve-copy">
+        <h3>{title}</h3>
         <div>
-          <h3 className="font-medium line-clamp-2 text-sm group-hover:text-primary transition-colors">
-            {movie.title}
-          </h3>
-          {movie.date && (
-            <p className="text-xs text-muted-foreground mt-1">{movie.date}</p>
-          )}
+          <span>{primaryLabel}</span>
+          {movie.date ? <time>{movie.date}</time> : null}
         </div>
       </div>
     </Link>

@@ -1,118 +1,63 @@
-import { getNavLinks, getGenreMovies, getAiringAnime } from "@/lib/api"
-import { Header } from "@/components/header"
-import { MovieSection } from "@/components/movie-section"
-import { Footer } from "@/components/footer"
-import Script from "next/script"
 import Link from "next/link"
-import Image from "next/image"
-
-const PROXY = "https://api.filmbase.fun/api/anime/image-proxy?url="
-const proxyImage = (url?: string) => url ? `${PROXY}${encodeURIComponent(url)}` : null
+import { getNavLinks, getUnifiedHomeData, getAiringAnime, catalogToMovieItem } from "@/lib/api"
+import { Header } from "@/components/header"
+import { FeatureHero } from "@/components/feature-hero"
+import { ClubFloor } from "@/components/club-floor"
+import { ClubSection } from "@/components/club-section"
+import { MixedPosterWall } from "@/components/mixed-poster-wall"
+import { TransmissionStrip } from "@/components/transmission-strip"
+import { Footer } from "@/components/footer"
+import { AdSlot } from "@/components/ad-slot"
+import { publicAnimeImageUrl } from "@/lib/presentation-images"
 
 export default async function HomePage() {
-  const navLinks = await getNavLinks()
-
-  const categoryResults = await Promise.all(
-    navLinks.categories.map((cat) =>
-      getGenreMovies(cat.path, 1).catch(() => null)
-    )
-  )
-
-  const animeData = await getAiringAnime(1, false).catch(() => null)
-  const animeItems: any[] = (animeData as any)?.data?.slice(0, 12) ?? []
-
-  const sections = navLinks.categories
-    .map((cat, i) => {
-      const data = categoryResults[i]
-      if (!data || !data.items?.length) return null
-      return {
-        category: cat,
-        section: { title: cat.name, items: data.items.slice(0, 6) },
-      }
-    })
-    .filter(Boolean) as Array<{
-    category: { name: string; path: string }
-    section: { title: string; items: any[] }
-  }>
+  const [navLinks, homeData, animeData] = await Promise.all([
+    getNavLinks().catch(() => ({ genres: [], categories: [], menuPages: [] })),
+    getUnifiedHomeData().catch(() => null),
+    getAiringAnime(1, false).catch(() => null),
+  ])
+  const animeItems: any[] = (animeData as any)?.data?.slice(0, 8) ?? []
+  const sections = (homeData?.sections ?? []).filter((section) => section.items.length).map((section) => ({
+    title: section.title,
+    items: section.items.map(catalogToMovieItem),
+  }))
+  const heroItems = (homeData?.featured ?? []).map(catalogToMovieItem)
+  const animeSection = animeItems.length > 0 ? {
+    title: "Anime after dark",
+    items: animeItems.map((item) => ({ title: item.anime_title, path: `__anime/${encodeURIComponent(item.anime_session ?? item.anime_id)}`, imageUrl: publicAnimeImageUrl(item.snapshot) || "", date: item.episode ? `Episode ${item.episode}` : null })),
+  } : null
+  const wallSections = animeSection ? [...sections.slice(0, 5), animeSection] : sections.slice(0, 6)
+  const counterSections = sections.slice(0, 4)
+  const transmissionLinks = navLinks.genres.length > 0 ? navLinks.genres : navLinks.categories.map(({ name, path }) => ({ name, path }))
 
   return (
     <div className="min-h-screen">
       <Header navLinks={navLinks} />
-
-      <main className="container mx-auto px-4 pt-24 pb-12">
-        {/* Hero */}
-        <div className="mb-12">
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-4">
-            Discover Your Next
-            <br />
-            <span className="text-primary">Favorite Film</span>
-          </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl">
-            Explore thousands of movies, TV series, and K-dramas. Download and enjoy premium content.
-          </p>
+      <main>
+        <FeatureHero items={heroItems} />
+        <TransmissionStrip genres={transmissionLinks} />
+        <div className="club-home site-shell">
+          <MixedPosterWall groups={wallSections} />
+          <AdSlot placement="catalogue-top" className="mb-[clamp(4rem,9vw,8rem)]" />
+          {counterSections.length > 0 && <ClubFloor sections={counterSections} />}
+          {sections.slice(4, 8).map((section, index) => <ClubSection key={`${section.title}-${index}`} section={section} mode={(["strip", "schedule", "wall"] as const)[index % 3]} moreLink={index === 0 ? "/discover/trending" : "/discover/latest"} />)}
+          {animeSection && <ClubSection mode="schedule" section={animeSection} moreLink="/anime" />}
+          <AdSlot placement="catalogue-inline" className="mb-[clamp(4rem,9vw,8rem)]" />
+          <section className="club-directory">
+            <div><p className="eyebrow">Every shelf, one doorway</p><h2>Browse without guessing.</h2></div>
+            <div className="club-directory-links">
+              <Link href="/discover">Lucky dip <span>↗</span></Link>
+              <Link href="/discover/a-z">A–Z archive <span>↗</span></Link>
+              <Link href="/search">Request desk <span>↗</span></Link>
+              <Link href="/anime">Anime after dark <span>↗</span></Link>
+            </div>
+          </section>
+          <section className="club-exit">
+            <div><span>Still undecided?</span><h2>Spin the whole archive.</h2></div>
+            <Link href="/search">Find something weird <b>↗</b></Link>
+          </section>
         </div>
-
-        <div className="space-y-12">
-          {sections.map(({ category, section }) => (
-            <MovieSection key={category.path} section={section} moreLink={`/${category.path}`} />
-          ))}
-        </div>
-
-        {navLinks.categories.length > 0 && (
-          <div className="mt-4 pt-12 border-t border-border">
-            <h2 className="text-2xl font-bold tracking-tight mb-6 text-center">Browse by Category</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {navLinks.categories.map((cat) => (
-                <Link key={cat.path} href={`/${cat.path}`} className="px-6 py-4 bg-secondary hover:bg-secondary/80 rounded-lg text-center transition-colors font-medium">
-                  {cat.name}
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {navLinks.menuPages.filter((p) => p.path).length > 0 && (
-          <div className="mt-12">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {navLinks.menuPages.filter((page) => page.path).map((page) => (
-                <Link key={page.path} href={`/${page.path}`} className="px-6 py-4 bg-primary/10 hover:bg-primary/20 rounded-lg text-center transition-colors font-medium">
-                  {page.name}
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Anime section */}
-        {animeItems.length > 0 && (
-          <div className="mt-16 pt-12 border-t border-border">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold tracking-tight">🎌 Airing Anime</h2>
-              <Link href="/anime" className="text-sm text-primary hover:underline">View all</Link>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {animeItems.map((anime: any, index: number) => {
-                const animeId = anime.anime_session ?? anime.anime_id
-                const img = proxyImage(anime.snapshot)
-                return (
-                  <Link key={`${animeId}-${index}`} href={`/anime/${encodeURIComponent(animeId)}`} className="group block">
-                    <div className="relative aspect-video overflow-hidden rounded-lg bg-secondary mb-2">
-                      {img ? (
-                        <Image src={img} alt={anime.anime_title ?? "Anime"} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">No Image</div>
-                      )}
-                    </div>
-                    <p className="text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">{anime.anime_title}</p>
-                    {anime.episode && <p className="text-xs text-muted-foreground mt-0.5">Ep. {anime.episode}</p>}
-                  </Link>
-                )
-              })}
-            </div>
-          </div>
-        )}
       </main>
-
       <Footer />
     </div>
   )

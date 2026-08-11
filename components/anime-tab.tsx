@@ -31,10 +31,11 @@ export function AnimeTab({ query, isActive, count }: AnimeTabProps) {
     <button
       onClick={handleClick}
       disabled={isLoading}
-      className={`px-5 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-1.5 ${
+      aria-pressed={isActive}
+      className={`flex items-center gap-2 border px-4 py-2.5 data-type text-[10px] font-bold uppercase transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
         isActive
-          ? "bg-primary text-primary-foreground"
-          : "bg-secondary hover:bg-secondary/80"
+          ? "border-primary bg-primary text-primary-foreground"
+          : "border-border bg-card hover:border-primary hover:text-primary"
       } disabled:opacity-70 disabled:cursor-not-allowed`}
     >
       {isLoading ? (

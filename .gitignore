@@ -25,3 +25,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local Codex/session state
+/.codex/
+/SESSION_CONTEXT.md
+
+# Android local state and build outputs
+/android-app/.gradle/
+/android-app/.kotlin/
+/android-app/**/build/
+/android-app/local.properties
+*.jks
+*.keystore

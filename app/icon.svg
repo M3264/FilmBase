@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="88" fill="#09131e"/>
+  <path d="M98 146h316v220H98z" fill="#ffb22f" stroke="#fff8e9" stroke-width="12"/>
+  <path d="M98 190h316M98 322h316" stroke="#09131e" stroke-width="12"/>
+  <circle cx="148" cy="168" r="15" fill="#09131e"/><circle cx="208" cy="168" r="15" fill="#09131e"/><circle cx="268" cy="168" r="15" fill="#09131e"/><circle cx="328" cy="168" r="15" fill="#09131e"/>
+  <circle cx="148" cy="344" r="15" fill="#09131e"/><circle cx="208" cy="344" r="15" fill="#09131e"/><circle cx="268" cy="344" r="15" fill="#09131e"/><circle cx="328" cy="344" r="15" fill="#09131e"/>
+  <text x="256" y="285" text-anchor="middle" fill="#09131e" font-family="Arial,sans-serif" font-size="92" font-weight="900">FB</text>
+</svg>

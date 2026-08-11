@@ -1,0 +1,8 @@
+<resources>
+    <style name="Theme.FilmBase" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:colorAccent">@color/projector</item>
+        <item name="android:windowBackground">@color/archive_navy</item>
+    </style>
+</resources>

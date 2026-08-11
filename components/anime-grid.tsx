@@ -1,170 +1,25 @@
-"use client"
-
-import { useEffect, useState, useCallback } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import { getAiringAnime } from "@/lib/api"
-import Image from "next/image"
 import Link from "next/link"
+import { getDiscoveryCategory, catalogToMovieItem } from "@/lib/api"
+import { CatalogView } from "@/components/catalog-view"
 
-const PAGES_PER_GROUP = 3
-
-interface AnimeItem {
-  anime_id: number
-  anime_session: string
-  anime_title: string
-  episode: number
-  snapshot: string
-}
-
-interface Section {
-  page: number
-  items: AnimeItem[]
-}
-
-export function AnimeGrid() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-
-  const initialGroup = Math.max(1, Number(searchParams.get("p")) || 1)
-
-  const [sections, setSections] = useState<Section[]>([])
-  const [groupStart, setGroupStart] = useState(initialGroup)
-  const [lastPage, setLastPage] = useState<number | null>(null)
-  const [loading, setLoading] = useState(false)
-
-  const fetchGroup = useCallback(async (startPage: number) => {
-    setLoading(true)
-    setSections([])
-    try {
-      const pages = [startPage, startPage + 1, startPage + 2]
-      const results = await Promise.all(
-        pages.map((p) => getAiringAnime(p, false).catch(() => null))
-      )
-
-      const newSections: Section[] = []
-      let detectedLastPage: number | null = null
-
-      results.forEach((res, i) => {
-        const r = res as any
-        if (!r) return
-        if (r.last_page && detectedLastPage === null) {
-          detectedLastPage = r.last_page
-        }
-        const items: AnimeItem[] = r.data ?? []
-        if (items.length > 0) {
-          newSections.push({ page: pages[i], items })
-        }
-      })
-
-      if (detectedLastPage !== null) setLastPage(detectedLastPage)
-      setSections(newSections)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    fetchGroup(groupStart)
-  }, [groupStart]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  const navigate = (newStart: number) => {
-    setGroupStart(newStart)
-    router.push(`/anime?p=${newStart}`, { scroll: true })
-  }
-
-  const canPrev = groupStart > 1
-  const canNext = lastPage === null || groupStart + PAGES_PER_GROUP <= lastPage
-
-  if (loading) {
-    return (
-      <div className="text-center py-20">
-        <p className="text-muted-foreground">Loading...</p>
-      </div>
-    )
-  }
-
-  if (!loading && sections.length === 0) {
-    return (
-      <div className="text-center py-20">
-        <p className="text-muted-foreground">No anime available right now.</p>
-      </div>
-    )
-  }
-
+export async function AnimeGrid({ page = 1 }: { page?: number }) {
+  const catalogue = await getDiscoveryCategory("anime", page).catch(() => null)
+  if (!catalogue?.items.length) return (
+    <section className="border border-dashed border-border px-6 py-16 text-center">
+      <p className="data-type text-xs uppercase text-primary">No signal</p>
+      <h2 className="mt-3 text-3xl font-black">The anime shelf is quiet.</h2>
+      <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-muted-foreground">The catalogue source is temporarily unavailable. Try again shortly.</p>
+      <Link href="/anime" className="mt-6 inline-flex border-2 border-foreground px-5 py-3 text-sm font-semibold hover:bg-foreground hover:text-background">Retune shelf</Link>
+    </section>
+  )
   return (
     <>
-      <div className="space-y-12">
-        {sections.map(({ page, items }) => (
-          <section key={page}>
-            <h2 className="text-lg font-semibold text-muted-foreground mb-4 border-b border-border pb-2">
-              Page {page}
-            </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-              {items.map((anime, index) => {
-                const animeId = anime.anime_session ?? anime.anime_id
-                const imgSrc = anime.snapshot
-                  ? anime.snapshot.startsWith("/")
-                    ? `https://api.filmbase.fun${anime.snapshot}`
-                    : `https://api.filmbase.fun/api/anime/image-proxy?url=${encodeURIComponent(anime.snapshot)}`
-                  : null
-
-                return (
-                  <Link
-                    key={`${animeId}-${index}`}
-                    href={`/anime/${encodeURIComponent(animeId)}`}
-                    className="group block"
-                  >
-                    <div className="relative aspect-video overflow-hidden rounded-lg bg-secondary mb-2">
-                      {imgSrc ? (
-                        <Image
-                          src={imgSrc}
-                          alt={anime.anime_title ?? "Anime"}
-                          fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-300"
-                          unoptimized
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
-                          No Image
-                        </div>
-                      )}
-                    </div>
-                    <p className="text-sm font-medium line-clamp-2 group-hover:text-primary transition-colors">
-                      {anime.anime_title}
-                    </p>
-                    {anime.episode != null && (
-                      <p className="text-xs text-muted-foreground mt-0.5">Ep. {anime.episode}</p>
-                    )}
-                  </Link>
-                )
-              })}
-            </div>
-          </section>
-        ))}
+      <div className="mb-5 flex items-end justify-between gap-4 border-b-2 border-foreground pb-3">
+        <div><p className="eyebrow mb-2 text-primary">Anime arrivals</p><h2 className="text-2xl font-black tracking-[-.04em] sm:text-3xl">Current shelf</h2></div>
+        <span className="data-type hidden text-[10px] uppercase text-muted-foreground sm:block">{catalogue.items.length} titles logged</span>
       </div>
-
-      <div className="flex items-center justify-between mt-12 gap-4">
-        <button
-          onClick={() => navigate(Math.max(1, groupStart - PAGES_PER_GROUP))}
-          disabled={!canPrev || loading}
-          className="px-6 py-2 rounded-lg bg-secondary hover:bg-primary hover:text-primary-foreground disabled:opacity-40 disabled:cursor-not-allowed font-medium transition-colors"
-        >
-          ← Previous
-        </button>
-
-        <span className="text-sm text-muted-foreground">
-          Pages {groupStart}–{groupStart + PAGES_PER_GROUP - 1}
-          {lastPage ? ` of ${lastPage}` : ""}
-        </span>
-
-        <button
-          onClick={() => navigate(groupStart + PAGES_PER_GROUP)}
-          disabled={!canNext || loading}
-          className="px-6 py-2 rounded-lg bg-secondary hover:bg-primary hover:text-primary-foreground disabled:opacity-40 disabled:cursor-not-allowed font-medium transition-colors"
-        >
-          Next →
-        </button>
-      </div>
+      <CatalogView items={catalogue.items.map(catalogToMovieItem)} />
+      {(page > 1 || catalogue.hasNext) && <nav className="mt-12 grid border-y border-border sm:grid-cols-2" aria-label="Anime catalogue pages">{page > 1 ? <Link href={`/anime?page=${page - 1}`} className="flex min-h-16 items-center justify-center border-b border-border px-5 text-sm font-semibold hover:bg-secondary sm:justify-start sm:border-b-0 sm:border-r">← Earlier shelf</Link> : <span />}{catalogue.hasNext ? <Link href={`/anime?page=${page + 1}`} className="flex min-h-16 items-center justify-center px-5 text-sm font-semibold hover:bg-secondary sm:justify-end">Next shelf →</Link> : <span />}</nav>}
     </>
   )
 }

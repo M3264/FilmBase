@@ -1,8 +1,9 @@
 import { notFound } from "next/navigation"
 import { getNavLinks, getGenreMovies } from "@/lib/api"
 import { Header } from "@/components/header"
-import { MovieCard } from "@/components/movie-card"
 import { Footer } from "@/components/footer"
+import { CatalogView } from "@/components/catalog-view"
+import { AdSlot } from "@/components/ad-slot"
 
 function cleanTitle(title: string): string {
   return title
@@ -16,17 +17,20 @@ export default async function SlugPage({
   params,
   searchParams,
 }: {
-  params: { path: string[] }
-  searchParams: { page?: string }
+  params: Promise<{ path: string[] }>
+  searchParams: Promise<{ page?: string }>
 }) {
+  const resolvedParams = await params
+  const resolvedSearchParams = await searchParams
   const navLinks = await getNavLinks()
 
-  if (!params || !params.path || params.path.length === 0) {
+  if (!resolvedParams.path || resolvedParams.path.length === 0) {
     notFound()
   }
 
-  const fullPath = params.path.join("/")
-  const currentPage = Number(searchParams?.page) || 1
+  const fullPath = resolvedParams.path.join("/")
+  const requestedPage = Number.parseInt(resolvedSearchParams.page || "1", 10)
+  const currentPage = Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1
 
   try {
     const genreData = await getGenreMovies(`category/${fullPath}`, currentPage)
@@ -41,41 +45,54 @@ export default async function SlugPage({
       <div className="min-h-screen">
         <Header navLinks={navLinks} />
 
-        <main className="container mx-auto px-4 pt-24 pb-12">
-          <div className="mb-12">
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-4">
-              {cleanedTitle}
-            </h1>
-            <p className="text-lg text-muted-foreground">
-              Page {genreData.currentPage} of {genreData.totalPages}
-            </p>
-          </div>
+        <main className="site-shell pb-16 pt-24 sm:pt-28">
+          <header className="mb-8 border-y border-border">
+            <div className="grid min-h-[15rem] gap-8 py-7 md:grid-cols-[minmax(0,1fr)_15rem] md:items-end md:py-10">
+              <div className="min-w-0">
+                <p className="eyebrow mb-4 text-primary">FilmBase programme / Catalogue shelf</p>
+                <h1 className="break-words text-[clamp(2.8rem,9vw,6.5rem)] font-black leading-[.86] tracking-[-.06em]">
+                  {cleanedTitle}
+                </h1>
+              </div>
+              <div className="border-l-4 border-primary pl-4">
+                <p className="data-type text-[10px] uppercase leading-5 text-muted-foreground">Broadcast index</p>
+                <p className="display-type mt-1 text-4xl font-black uppercase">{String(genreData.currentPage).padStart(2, "0")}<span className="text-muted-foreground">/{String(genreData.totalPages).padStart(2, "0")}</span></p>
+                <p className="mt-3 text-xs leading-5 text-muted-foreground">A poster-led shelf from the FilmBase circulation desk.</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap justify-between gap-2 border-t border-border py-3 data-type text-[9px] uppercase text-muted-foreground sm:text-[10px]">
+              <span>{genreData.items.length} titles received</span>
+              <span>Channel / {fullPath.replaceAll("/", " · ")}</span>
+              <span>Updated catalogue feed</span>
+            </div>
+          </header>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-            {genreData.items.map((movie, index) => (
-              <MovieCard key={`${movie.path}-${index}`} movie={movie} />
-            ))}
-          </div>
+          <AdSlot placement="catalogue-top" className="mb-8" />
+
+          <CatalogView items={genreData.items} />
+
+          <AdSlot placement="catalogue-inline" className="mt-10" />
 
           {genreData.totalPages > 1 && (
-            <div className="flex justify-center gap-4 mt-12">
+            <nav className="mt-12 grid border-y border-border sm:grid-cols-[1fr_auto_1fr]" aria-label="Catalogue pages">
               {currentPage > 1 && (
                 <a
                   href={`/category/${fullPath}?page=${currentPage - 1}`}
-                  className="px-6 py-2 bg-secondary hover:bg-secondary/80 rounded-lg transition-colors"
+                  className="flex min-h-16 items-center justify-center border-b border-border px-5 text-sm font-semibold outline-none hover:bg-secondary focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary sm:justify-start sm:border-b-0"
                 >
-                  Previous
+                  ← Previous reel
                 </a>
               )}
+              <span className="order-first flex min-h-12 items-center justify-center border-b border-border px-7 data-type text-[10px] uppercase text-muted-foreground sm:order-none sm:border-x sm:border-b-0">Page {genreData.currentPage} of {genreData.totalPages}</span>
               {currentPage < genreData.totalPages && (
                 <a
                   href={`/category/${fullPath}?page=${currentPage + 1}`}
-                  className="px-6 py-2 bg-secondary hover:bg-secondary/80 rounded-lg transition-colors"
+                  className="flex min-h-16 items-center justify-center px-5 text-sm font-semibold outline-none hover:bg-secondary focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary sm:justify-end"
                 >
-                  Next
+                  Next reel →
                 </a>
               )}
-            </div>
+            </nav>
           )}
         </main>
 

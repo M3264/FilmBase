@@ -2,16 +2,27 @@ import type React from "react"
 import type { Metadata } from "next"
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
-import { Analytics } from "@vercel/analytics/next"
 import { Suspense } from "react"
-import Script from "next/script"
 import { ThemeProvider } from "@/components/theme-provider"
 import { LoadingOverlay } from "@/components/loading-overlay"
+import { AdNetwork } from "@/components/ad-network"
+import { PwaRegister } from "@/components/pwa-register"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "FilmBase - Download Movies & TV Series",
-  description: "Your ultimate destination for movies, TV series, and K-dramas"
+  title: "FilmBase — Films, series and anime",
+  description: "A clear, curated archive of movies, series and anime.",
+  applicationName: "FilmBase",
+  appleWebApp: { capable: true, title: "FilmBase", statusBarStyle: "black-translucent" },
+  formatDetection: { telephone: false },
+  icons: { icon: "/icon.svg", apple: "/icon.svg" },
+}
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#ffb22f",
 }
 
 export default function RootLayout({
@@ -22,38 +33,14 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
-        <ThemeProvider defaultTheme="dark">
+        <ThemeProvider>
+          <AdNetwork />
+          <PwaRegister />
           <LoadingOverlay />
           <Suspense fallback={<div>Loading...</div>}>
             {children}
           </Suspense>
         </ThemeProvider>
-
-        <Analytics />
-
-        <Script
-          src="https://quge5.com/88/tag.min.js"
-          data-zone="223721"
-          data-cfasync="false"
-          strategy="beforeInteractive"
-        />
-
-        <Script
-          src="https://scripts.simpleanalyticscdn.com/latest.js"
-          strategy="afterInteractive"
-        />
-
-        <Script
-          src="https://personal-umami.luvhuj.easypanel.host/script.js"
-          data-website-id="58a28357-d9a1-42df-88d8-cc9b8332dce2"
-          strategy="afterInteractive"
-        />
-
-        <Script
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5635313643679003"
-          strategy="afterInteractive"
-          crossOrigin="anonymous"
-        />
       </body>
     </html>
   )

@@ -1,275 +1,93 @@
 "use client"
 
 import type React from "react"
-
 import Link from "next/link"
-import { useState, useEffect, useRef } from "react"
-import { Search, Menu, X } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { useRouter } from "next/navigation"
+import { useEffect, useRef, useState } from "react"
+import { Menu, Search, X } from "lucide-react"
+import { usePathname, useRouter } from "next/navigation"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { displayTitle, publicMoviePath } from "@/lib/presentation"
 
-interface Category {
-  name: string
-  path: string
-  subCategories?: Array<{ name: string; path: string }>
-}
+interface Category { name: string; path: string; subCategories?: Array<{ name: string; path: string }> }
+interface NavLinks { genres: Array<{ name: string; path: string }>; categories: Category[]; menuPages: Array<{ name: string; path: string }> }
+interface Suggestion { title: string; path: string; year?: number; type?: string }
 
-interface NavLinks {
-  genres: Array<{ name: string; path: string }>
-  categories: Category[]
-  menuPages: Array<{ name: string; path: string }>
-}
-
-interface Suggestion {
-  title: string
-  path: string
-  image?: string
-}
+const fixedShelves = [
+  { number: "01", label: "Front desk", short: "Home", href: "/", match: (path: string) => path === "/" },
+  { number: "02", label: "Films", short: "Films", href: "/discover/category/hollywood-movie", match: (path: string) => path.includes("hollywood-movie") || path.startsWith("/movie/") },
+  { number: "03", label: "Series", short: "Series", href: "/discover/category/hollywood-tv-series", match: (path: string) => path.includes("tv-series") },
+  { number: "04", label: "Anime", short: "Anime", href: "/anime", match: (path: string) => path.startsWith("/anime") },
+  { number: "05", label: "Lucky dip", short: "Lucky", href: "/discover", match: (path: string) => path === "/discover" },
+  { number: "06", label: "A–Z index", short: "A–Z", href: "/discover/a-z", match: (path: string) => path.startsWith("/discover/a-z") },
+]
 
 export function Header({ navLinks }: { navLinks: NavLinks }) {
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [isSearchOpen, setIsSearchOpen] = useState(false)
-  const [searchQuery, setSearchQuery] = useState("")
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [shelvesOpen, setShelvesOpen] = useState(false)
+  const [query, setQuery] = useState("")
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
-  const [showSuggestions, setShowSuggestions] = useState(false)
-  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false)
   const router = useRouter()
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const searchWrapperRef = useRef<HTMLDivElement>(null)
+  const pathname = usePathname()
+  const debounce = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Fetch suggestions with debounce
   useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-
-    if (!searchQuery.trim() || searchQuery.trim().length < 2) {
-      setSuggestions([])
-      setShowSuggestions(false)
-      return
-    }
-
-    debounceRef.current = setTimeout(async () => {
-      setIsLoadingSuggestions(true)
+    if (debounce.current) clearTimeout(debounce.current)
+    if (query.trim().length < 2) { setSuggestions([]); return }
+    debounce.current = setTimeout(async () => {
       try {
-        const res = await fetch(
-  `https://api.filmbase.fun/api/search?query=${encodeURIComponent(searchQuery.trim())}&page=1`
-  )
-  const data = await res.json()
-  
-  const items: Suggestion[] = (data?.data?.items ?? []).slice(0, 6).map((item: any) => ({
-  title: item.title ?? "",
-  path: item.path ?? "",
-  image: item.imageUrl ?? null,
-}))
-        setSuggestions(items)
-        setShowSuggestions(items.length > 0)
-      } catch {
-        setSuggestions([])
-        setShowSuggestions(false)
-      } finally {
-        setIsLoadingSuggestions(false)
-      }
+        const response = await fetch(`/api/v1/search?q=${encodeURIComponent(query.trim())}&page=1&pageSize=6`)
+        const json = await response.json()
+        setSuggestions((json?.data ?? []).map((item: { title: string; publicPath?: string; path?: string; year?: number; type?: string }) => ({ title: item.title, path: item.publicPath || item.path || "", year: item.year, type: item.type })).filter((item: Suggestion) => item.path))
+      } catch { setSuggestions([]) }
     }, 300)
+    return () => { if (debounce.current) clearTimeout(debounce.current) }
+  }, [query])
 
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
-    }
-  }, [searchQuery])
-
-  // Close suggestions on outside click
   useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (searchWrapperRef.current && !searchWrapperRef.current.contains(e.target as Node)) {
-        setShowSuggestions(false)
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
+    const close = (event: KeyboardEvent) => { if (event.key === "Escape") { setMenuOpen(false); setSearchOpen(false); setShelvesOpen(false) } }
+    window.addEventListener("keydown", close)
+    return () => window.removeEventListener("keydown", close)
   }, [])
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (searchQuery.trim()) {
-      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
-      setIsSearchOpen(false)
-      setSearchQuery("")
-      setSuggestions([])
-      setShowSuggestions(false)
-    }
-  }
+  useEffect(() => { setMenuOpen(false); setSearchOpen(false); setShelvesOpen(false) }, [pathname])
 
-  const handleSuggestionClick = (path: string) => {
-    router.push(`/movie/${path}`)
-    setIsSearchOpen(false)
-    setSearchQuery("")
-    setSuggestions([])
-    setShowSuggestions(false)
-  }
-
-  // Prefer categories; fall back to menuPages if categories is empty
-  const primaryLinks: Category[] =
-    navLinks.categories.length > 0
-      ? navLinks.categories
-      : navLinks.menuPages.map((p) => ({ ...p, subCategories: [] }))
-
-  const hasGenres = navLinks.genres.length > 0
+  const search = (event: React.FormEvent) => { event.preventDefault(); if (query.trim()) router.push(`/search?q=${encodeURIComponent(query.trim())}`) }
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          <Link href="/" className="text-2xl font-bold tracking-tight">
-            FilmBase<span className="text-primary">.</span>
-          </Link>
+    <header className="archive-header">
+      <div className="site-shell archive-header-main">
+        <Link href="/" className="archive-brand" aria-label="FilmBase home">
+          <span className="archive-brand-stamp">FB</span>
+          <span><b>FilmBase</b><small>Neighbourhood archive</small></span>
+        </Link>
 
-          {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-6">
-            {primaryLinks.map((item) => (
-              <Link
-                key={item.path}
-                href={`/${item.path}`}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {item.name}
-              </Link>
-            ))}
+        <nav className="archive-rail archive-rail-desktop" aria-label="Shelf rail">
+          {fixedShelves.map((item) => <ShelfLink key={item.href} item={item} pathname={pathname} />)}
+          <button type="button" className={shelvesOpen ? "active" : ""} onClick={() => setShelvesOpen(value => !value)} aria-expanded={shelvesOpen} aria-controls="browse-shelves"><span>07</span><b>Browse shelves</b></button>
+        </nav>
 
-            {hasGenres && (
-              <div className="relative group">
-                <button className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  Genres
-                </button>
-                <div className="absolute top-full left-0 mt-2 w-48 bg-card border border-border rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
-                  <div className="p-2 grid gap-1">
-                    {navLinks.genres.slice(0, 10).map((genre) => (
-                      <Link
-                        key={genre.path}
-                        href={`/${genre.path}`}
-                        className="px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary rounded transition-colors"
-                      >
-                        {genre.name}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </nav>
-
-          <div className="flex items-center gap-4">
-            <ThemeToggle />
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                setIsSearchOpen(!isSearchOpen)
-                if (isSearchOpen) {
-                  setSearchQuery("")
-                  setSuggestions([])
-                  setShowSuggestions(false)
-                }
-              }}
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <Search className="h-5 w-5" />
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden text-muted-foreground hover:text-foreground"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-            >
-              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
-          </div>
+        <div className="archive-tools">
+          <ThemeToggle />
+          <button type="button" onClick={() => setSearchOpen(value => !value)} aria-label="Open request desk" aria-expanded={searchOpen} aria-controls="archive-search"><Search /></button>
+          <button type="button" onClick={() => setMenuOpen(value => !value)} aria-label="Open full archive index" aria-expanded={menuOpen} aria-controls="archive-menu"><span className="data-type">INDEX</span>{menuOpen ? <X /> : <Menu />}</button>
         </div>
-
-        {/* Search bar */}
-        {isSearchOpen && (
-          <div className="pb-4" ref={searchWrapperRef}>
-            <form onSubmit={handleSearch} className="flex gap-2">
-              <div className="relative flex-1">
-                <Input
-                  type="search"
-                  placeholder="Search movies, series, anime..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-                  className="w-full"
-                  autoFocus
-                />
-
-                {/* Suggestions dropdown */}
-                {showSuggestions && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg shadow-xl z-50 overflow-hidden">
-                    {isLoadingSuggestions ? (
-                      <div className="px-4 py-3 text-sm text-muted-foreground">Loading...</div>
-                    ) : (
-                      suggestions.map((s, i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          onClick={() => handleSuggestionClick(s.path)}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-secondary transition-colors"
-                        >
-                          {s.image && (
-                            <img
-                              src={s.image}
-                              alt=""
-                              className="w-8 h-12 object-cover rounded flex-shrink-0"
-                            />
-                          )}
-                          <span className="text-sm font-medium line-clamp-1">{s.title}</span>
-                        </button>
-                      ))
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Visible Enter/Search button */}
-              <Button type="submit" disabled={!searchQuery.trim()}>
-                <Search className="h-4 w-4 mr-1.5" />
-                Search
-              </Button>
-            </form>
-          </div>
-        )}
-
-        {/* Mobile menu */}
-        {isMenuOpen && (
-          <div className="md:hidden pb-4 space-y-2">
-            {primaryLinks.map((item) => (
-              <Link
-                key={item.path}
-                href={`/${item.path}`}
-                className="block px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary rounded transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {item.name}
-              </Link>
-            ))}
-
-            {hasGenres && (
-              <>
-                <div className="px-4 py-2 text-sm font-medium text-foreground">Genres</div>
-                {navLinks.genres.map((genre) => (
-                  <Link
-                    key={genre.path}
-                    href={`/${genre.path}`}
-                    className="block px-8 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary rounded transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    {genre.name}
-                  </Link>
-                ))}
-              </>
-            )}
-          </div>
-        )}
       </div>
+
+      <div className="archive-rail archive-rail-mobile site-shell" aria-label="Mobile shelf rail">
+        {fixedShelves.map((item) => <ShelfLink key={item.href} item={item} pathname={pathname} compact />)}
+      </div>
+
+      {shelvesOpen && <nav id="browse-shelves" className="archive-shelf-panel site-shell" aria-label="Browse all shelves">{navLinks.categories.slice(0, 18).map((item, index) => <Link key={item.path} href={`/${item.path}`}><span>{String(index + 1).padStart(2, "0")}</span><b>{item.name}</b><i>→</i></Link>)}</nav>}
+
+      {searchOpen && <div id="archive-search" className="archive-search"><form onSubmit={search} className="site-shell"><span className="archive-search-tag">Request slip</span><label className="sr-only" htmlFor="global-search">Search FilmBase</label><input id="global-search" autoFocus value={query} onChange={event => setQuery(event.target.value)} placeholder="Find a title, actor or country…" /><button>Search archive ↗</button>{suggestions.length > 0 && <div className="archive-suggestions">{suggestions.map((item, index) => <Link key={`${item.path}-${index}`} href={`/movie/${publicMoviePath(item.path)}`}><span>{String(index + 1).padStart(2, "0")}</span><b>{displayTitle(item.title)}</b><small>{[item.type, item.year].filter(Boolean).join(" · ") || "Title file"}</small></Link>)}</div>}</form></div>}
+
+      {menuOpen && <nav id="archive-menu" className="archive-menu site-shell" aria-label="Full archive index"><div><p className="eyebrow">Browse</p>{navLinks.categories.map((item, index) => <Link key={item.path} href={`/${item.path}`}><span>{String(index + 1).padStart(2, "0")}</span>{item.name}<b>→</b></Link>)}</div><div><p className="eyebrow">Archive rooms</p>{fixedShelves.map(item => <Link key={item.href} href={item.href}><span>{item.number}</span>{item.label}<b>→</b></Link>)}<Link href="/search"><span>07</span>Request desk<b>→</b></Link></div></nav>}
     </header>
   )
+}
+
+function ShelfLink({ item, pathname, compact = false }: { item: typeof fixedShelves[number]; pathname: string; compact?: boolean }) {
+  const active = item.match(pathname)
+  return <Link href={item.href} className={active ? "active" : ""} aria-current={active ? "page" : undefined}><span>{item.number}</span><b>{compact ? item.short : item.label}</b></Link>
 }

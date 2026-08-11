@@ -38,8 +38,8 @@ export function LoadingOverlay() {
   if (!isLoading) return null
 
   return (
-    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
-      <div className="bg-card border rounded-lg p-6 shadow-lg flex items-center gap-3">
+    <div className="fixed inset-0 bg-background/90 z-50 flex items-center justify-center">
+      <div className="bg-card border border-border p-6 shadow-lg flex items-center gap-3">
         <Loader2 className="h-5 w-5 animate-spin text-primary" />
         <span className="text-sm font-medium">{loadingText}</span>
       </div>

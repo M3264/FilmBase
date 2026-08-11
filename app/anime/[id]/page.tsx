@@ -4,146 +4,92 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import Image from "next/image"
 import Link from "next/link"
-import Script from "next/script"
+import { ArrowLeft, Play } from "lucide-react"
+import { AdSlot } from "@/components/ad-slot"
+import { publicAnimeImageUrl } from "@/lib/presentation-images"
 
-const PROXY = "https://api.filmbase.fun/api/anime/image-proxy?url="
-const proxyImage = (url?: string) => url ? `${PROXY}${encodeURIComponent(url)}` : null
+const proxyImage = publicAnimeImageUrl
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params
   try {
-    const anime = await getAnimeInfo(params.id) as any
-    const info = anime?.data ?? anime
-    const img = proxyImage(info?.cover ?? info?.poster)
+    const response = await getAnimeInfo(id) as any
+    const anime = response?.data ?? response
+    const image = proxyImage(anime?.cover ?? anime?.poster)
     return {
-      title: `${info?.title ?? "Anime"} - FilmBase`,
-      description: info?.synopsis?.slice(0, 160) ?? `Watch ${info?.title} on FilmBase`,
-      openGraph: {
-        title: info?.title ?? "Anime",
-        description: info?.synopsis?.slice(0, 160) ?? "",
-        images: img ? [{ url: img }] : [],
-        type: "video.tv_show",
-      },
-      twitter: {
-        card: "summary_large_image",
-        title: info?.title ?? "Anime",
-        description: info?.synopsis?.slice(0, 160) ?? "",
-        images: img ? [img] : [],
-      },
+      title: `${anime?.title ?? "Anime"} - FilmBase`,
+      description: anime?.synopsis?.slice(0, 160) ?? `Explore ${anime?.title} on FilmBase`,
+      openGraph: { title: anime?.title ?? "Anime", description: anime?.synopsis?.slice(0, 160) ?? "", images: image ? [{ url: image }] : [], type: "video.tv_show" },
+      twitter: { card: "summary_large_image", title: anime?.title ?? "Anime", description: anime?.synopsis?.slice(0, 160) ?? "", images: image ? [image] : [] },
     }
-  } catch {
-    return { title: "Anime - FilmBase" }
-  }
+  } catch { return { title: "Anime - FilmBase" } }
 }
 
-export default async function AnimeDetailPage({ params }: { params: { id: string } }) {
+export default async function AnimeDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const [navLinks, animeRaw, episodesRaw] = await Promise.all([
-    getNavLinks(),
-    getAnimeInfo(params.id).catch(() => null),
-    getAnimeEpisodes(params.id).catch(() => null),
+    getNavLinks().catch(() => ({ genres: [], categories: [], menuPages: [] })),
+    getAnimeInfo(id).catch(() => null),
+    getAnimeEpisodes(id).catch(() => null),
   ])
-
   const anime = (animeRaw as any)?.data ?? animeRaw as any
+  const episodes: any[] = (episodesRaw as any)?.episodes ?? (episodesRaw as any)?.data ?? []
 
-  // Support both shapes: { episodes: [...] } or { data: [...] }
-  const episodesData: any[] =
-    (episodesRaw as any)?.episodes ??
-    (episodesRaw as any)?.data ??
-    []
-
-  if (!anime) {
-    return (
-      <div className="min-h-screen">
-        <Header navLinks={navLinks} />
-        <main className="container mx-auto px-4 pt-24 pb-12 text-center">
-          <p className="text-muted-foreground">Anime not found.</p>
-          <Link href="/anime" className="text-primary hover:underline mt-4 block">Back to Anime</Link>
-        </main>
-        <Footer />
-      </div>
-    )
-  }
+  if (!anime) return (
+    <div className="min-h-screen">
+      <Header navLinks={navLinks} />
+      <main className="site-shell pt-28 pb-16">
+        <section className="mx-auto max-w-2xl border border-dashed border-border px-6 py-16 text-center">
+          <p className="eyebrow text-primary">Tape missing</p>
+          <h1 className="display-type mt-3 text-4xl font-black uppercase">This series left the shelf</h1>
+          <p className="mt-4 text-sm leading-6 text-muted-foreground">The listing may have moved or the catalogue signal is temporarily unavailable.</p>
+          <Link href="/anime" className="mt-7 inline-block border border-foreground px-5 py-3 text-sm font-semibold hover:bg-foreground hover:text-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">Return to anime on air</Link>
+        </section>
+      </main>
+      <Footer />
+    </div>
+  )
 
   const coverImg = proxyImage(anime.cover ?? anime.poster)
+  const metadata = [anime.status && ["Status", anime.status], anime.season && ["Season", anime.season], anime.episodes_count && ["Episodes", anime.episodes_count]].filter(Boolean) as [string, string | number][]
 
   return (
     <div className="min-h-screen">
       <Header navLinks={navLinks} />
+      <main className="site-shell pt-24 pb-14 sm:pt-28">
+        <Link href="/anime" className="mb-7 inline-flex items-center gap-2 py-2 text-sm text-muted-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><ArrowLeft className="h-4 w-4" /> Back to the broadcast board</Link>
 
-      <main className="container mx-auto px-4 pt-24 pb-12">
-        <div className="grid md:grid-cols-[280px_1fr] gap-8 mb-12">
-          {coverImg && (
-            <div className="relative aspect-[2/3] overflow-hidden rounded-lg bg-secondary">
-              <Image src={coverImg} alt={anime.title ?? "Anime"} fill className="object-cover" priority />
-            </div>
-          )}
-
-          <div className="space-y-4">
-            <h1 className="text-4xl font-bold tracking-tight">{anime.title}</h1>
-            {anime.status && (
-              <p className="text-sm text-muted-foreground">
-                Status: <span className="text-foreground font-medium">{anime.status}</span>
-              </p>
-            )}
-            {anime.season && (
-              <p className="text-sm text-muted-foreground">
-                Season: <span className="text-foreground font-medium">{anime.season}</span>
-              </p>
-            )}
-            {anime.episodes_count && (
-              <p className="text-sm text-muted-foreground">
-                Episodes: <span className="text-foreground font-medium">{anime.episodes_count}</span>
-              </p>
-            )}
-            {anime.synopsis && (
-              <div>
-                <h2 className="text-lg font-semibold mb-1">Synopsis</h2>
-                <p className="text-muted-foreground leading-relaxed">{anime.synopsis}</p>
-              </div>
-            )}
-            <div className="w-full">
-              <div id="container-aadc53e5aa579316a6819840d149ca4b" />
-            </div>
+        <article className="grid gap-7 border-y border-border py-7 md:grid-cols-[minmax(220px,320px)_1fr] md:gap-12 md:py-10">
+          <div className="relative mx-auto aspect-[2/3] w-full max-w-[320px] overflow-hidden bg-secondary poster-shadow md:mx-0">
+            {coverImg ? <Image src={coverImg} alt={`Poster for ${anime.title ?? "anime"}`} fill className="object-cover" sizes="(max-width: 768px) 80vw, 320px" priority unoptimized /> : <div className="grid h-full place-items-center p-8 text-center data-type text-xs uppercase text-muted-foreground">Cover art unavailable</div>}
+            <span className="absolute left-0 top-0 bg-primary px-3 py-2 data-type text-[10px] font-bold uppercase text-primary-foreground">FilmBase TV-12</span>
           </div>
-        </div>
 
-        {episodesData.length > 0 && (
-          <section>
-            <h2 className="text-2xl font-bold tracking-tight mb-4">Episodes</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-              {episodesData.map((ep: any) => {
-                /*
-                 * ep.id looks like:
-                 *   "ba42bb01-2bbc-ab83-681c-a094054f4f79/835c486e..."
-                 *
-                 * We split on "/" to get the session part after the anime_id prefix,
-                 * then build the route as /anime/<animeId>/episode/<sessionHash>
-                 * so the episode page can use it to fetch the actual stream.
-                 *
-                 * ep.number is the real episode number (e.g. 25, 26, 27…)
-                 * and is used as the display label — NOT a sequential index.
-                 */
-                const [, sessionHash] = (ep.id as string).split("/")
-                const epHref = `/anime/${encodeURIComponent(params.id)}/episode/${encodeURIComponent(sessionHash)}`
+          <div className="flex min-w-0 flex-col md:py-3">
+            <p className="eyebrow text-primary">Late-night series file / {episodes.length ? `${episodes.length} transmissions` : "Schedule pending"}</p>
+            <h1 className="mt-4 break-words text-[clamp(2.8rem,9vw,6.5rem)] font-black leading-[.84] tracking-[-.065em]">{anime.title || "Untitled anime"}</h1>
+            {metadata.length > 0 && <dl className="mt-7 grid grid-cols-2 border-y border-border sm:grid-cols-3">{metadata.map(([label, value]) => <div key={label} className="border-r border-border px-3 py-4 first:pl-0 last:border-r-0"><dt className="eyebrow text-muted-foreground">{label}</dt><dd className="mt-2 text-sm font-semibold">{value}</dd></div>)}</dl>}
+            {anime.synopsis && <section className="mt-7 grid gap-3 sm:grid-cols-[7rem_1fr]"><h2 className="eyebrow pt-1 text-primary">Case notes</h2><p className="max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">{anime.synopsis}</p></section>}
+            <div className="mt-auto pt-7"><AdSlot placement="detail-inline" compact /></div>
+          </div>
+        </article>
 
-                return (
-                  <Link
-                    key={ep.id}
-                    href={epHref}
-                    className="flex items-center justify-center px-4 py-3 bg-secondary hover:bg-primary hover:text-primary-foreground rounded-lg text-sm font-medium transition-colors"
-                  >
-                    Ep. {ep.number}
-                  </Link>
-                )
+        <section className="mt-12" aria-labelledby="episode-guide">
+          <div className="mb-5 flex items-end justify-between gap-4 border-b-2 border-foreground pb-3">
+            <div><p className="eyebrow mb-2 text-primary">Transmission log</p><h2 id="episode-guide" className="display-type text-3xl font-black uppercase sm:text-4xl">Episode guide</h2></div>
+            <span className="data-type hidden text-[10px] uppercase text-muted-foreground sm:block">Select a tape to find its files</span>
+          </div>
+          {episodes.length > 0 ? (
+            <div className="grid grid-cols-2 border-l border-t border-border sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+              {episodes.map((episode: any, index) => {
+                const number = episode.number ?? index + 1
+                return <Link key={episode.id ?? number} href={`/anime/${encodeURIComponent(id)}/episode/${encodeURIComponent(String(number))}`} className="group min-w-0 border-b border-r border-border p-4 hover:bg-primary hover:text-primary-foreground focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:p-5"><span className="data-type text-[9px] uppercase opacity-60">Transmission {String(index + 1).padStart(2, "0")}</span><span className="mt-2 flex items-center justify-between gap-2 text-sm font-bold"><span>Episode {number}</span><Play className="h-3.5 w-3.5 shrink-0" aria-hidden="true" /></span></Link>
               })}
             </div>
-          </section>
-        )}
-
-        <div className="w-full mt-12">
-          <div id="container-aadc53e5aa579316a6819840d149ca4b-2" />
-        </div>
+          ) : <div className="border border-dashed border-border px-6 py-12 text-center"><p className="text-sm text-muted-foreground">No episodes have been logged for this series yet.</p></div>}
+        </section>
+        <div className="mt-12"><AdSlot placement="catalogue-inline" /></div>
       </main>
-
       <Footer />
     </div>
   )
