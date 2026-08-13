@@ -4,7 +4,9 @@ export async function fetchJson<T>(
   url: string,
   options: RequestInit & { timeoutMs?: number; provider?: Provider } = {},
 ): Promise<T> {
-  const { timeoutMs = 10_000, provider = null, ...request } = options
+  // Catalogue providers are optional inputs to the UI. Fail quickly so a slow
+  // provider cannot hold hundreds of server-render requests open at once.
+  const { timeoutMs = 6_000, provider = null, ...request } = options
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), timeoutMs)
   try {

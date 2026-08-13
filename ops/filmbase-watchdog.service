@@ -1,0 +1,7 @@
+[Unit]
+Description=Recover an unresponsive FilmBase web process
+After=filmbase-preview.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/filmbase-watchdog

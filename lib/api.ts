@@ -131,23 +131,10 @@ export async function getUnifiedHomeData(): Promise<UnifiedHomeData> {
     })
   }
   if (!sections.length) throw firstRejection(ninejaResult, legacyResult)
-  const uniqueById = [...new Map(sections.flatMap((section) => section.items).map((item) => [item.id, item])).values()]
-  const artworkMissing = uniqueById.filter((item) => !item.imageUrl && item.providers.some((provider) => provider.provider === "ninejarocks")).slice(0, 22)
-  for (let offset = 0; offset < artworkMissing.length; offset += 4) {
-    await Promise.all(artworkMissing.slice(offset, offset + 4).map(async (item) => {
-    const provider = item.providers.find((candidate) => candidate.provider === "ninejarocks")
-    if (!provider) return
-    try {
-      const detail = await ninejaDetail(provider.id)
-      const artwork = detail.screenshots?.[0] || detail.thumbnail || null
-      if (artwork) {
-        for (const target of sections.flatMap((section) => section.items).filter((candidate) => candidate.id === item.id)) {
-          target.imageUrl = artwork; target.backdropUrl = artwork
-        }
-      }
-    } catch { /* one missing poster must not block the whole homepage */ }
-    }))
-  }
+  // Do not expand the homepage feed into per-title detail requests. API2 can
+  // occasionally be slow while populating its SQLite cache; that old fan-out
+  // multiplied one page view into 20+ requests and eventually exhausted the
+  // web process. Cards without feed artwork use the normal missing-image state.
   const allItems = sections.flatMap((section) => section.items)
   return {
     sections,
