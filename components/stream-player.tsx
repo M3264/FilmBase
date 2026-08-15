@@ -5,7 +5,7 @@ import Hls from "hls.js"
 
 export function StreamPlayer({ tmdbId }: { tmdbId: number }) {
   const videoRef = useRef<HTMLVideoElement>(null)
-  const [source, setSource] = useState<{ url: string; title: string; quality: string } | null>(null)
+  const [source, setSource] = useState<{ url: string; title: string; quality: string; type: string } | null>(null)
   const [error, setError] = useState("")
 
   useEffect(() => {
@@ -20,6 +20,7 @@ export function StreamPlayer({ tmdbId }: { tmdbId: number }) {
   useEffect(() => {
     const video = videoRef.current
     if (!video || !source) return
+    if (source.type === "mp4") { video.src = source.url; return }
     if (video.canPlayType("application/vnd.apple.mpegurl")) { video.src = source.url; return }
     if (!Hls.isSupported()) { setError("This browser cannot play HLS video."); return }
     const hls = new Hls({ enableWorker: true, lowLatencyMode: false })
