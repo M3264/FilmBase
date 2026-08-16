@@ -181,10 +181,10 @@ export async function getCatalogTitle(idOrPath: string): Promise<CatalogTitle> {
   if (idOrPath === LOCAL_MEDIA_PATH || idOrPath === localSpiderTitle.id || idOrPath === `fb-${LOCAL_MEDIA_PATH}`) return localSpiderTitle
   const ref = parseReference(idOrPath)
   if (ref.provider === "ninejarocks") return normalizeNinejaDetail(ref.id, await ninejaDetail(ref.id))
-  if (ref.provider === "legacy") return normalizeLegacyDetail(await getMovieDetailsLegacy(ref.id))
+  if (ref.provider === "legacy") return getLegacyCatalogTitle(ref.id)
   const ninejaId = idOrPath.match(/(?:^|-)id(\d+)(?:\.html)?$/)?.[1] || (/^\d+$/.test(idOrPath) ? idOrPath : null)
   if (ninejaId) return normalizeNinejaDetail(ninejaId, await ninejaDetail(ninejaId))
-  return normalizeLegacyDetail(await getMovieDetailsLegacy(idOrPath))
+  return getLegacyCatalogTitle(idOrPath)
 }
 
 export async function getTitleOffers(idOrPath: string): Promise<SourceOffer[]> {
@@ -299,6 +299,22 @@ async function getMovieDetailsLegacy(path: string): Promise<MovieDetails> {
   const data = await legacyJson<{ data?: MovieDetails }>(`/api/movie/${encodeURIComponent(path)}`, { cache: "no-store" })
   if (!data.data) throw new CatalogApiError("Title was not found", "NOT_FOUND", 404, "legacy")
   return data.data
+}
+
+async function getLegacyCatalogTitle(path: string): Promise<CatalogTitle> {
+  const detail = await getMovieDetailsLegacy(path)
+  const title = normalizeLegacyDetail(detail)
+  try {
+    const result = await searchMoviesLegacy(detail.title, 1)
+    const normalizedPath = detail.path.replace(/^\/+|\/+$/g, "")
+    const artwork = result.items.find((item) => item.path.replace(/^\/+|\/+$/g, "") === normalizedPath)
+      || result.items.find((item) => item.title.trim().toLowerCase() === detail.title.trim().toLowerCase())
+    if (artwork?.imageUrl) {
+      title.imageUrl = artwork.imageUrl
+      title.backdropUrl = artwork.imageUrl
+    }
+  } catch { /* legacy details remain usable when artwork lookup is unavailable */ }
+  return title
 }
 
 async function getGenreMoviesLegacy(genre: string, page = 1): Promise<SearchResult> {
