@@ -38,7 +38,7 @@ export interface NinejaDetail {
 
 export async function ninejaHome(): Promise<Array<{ name: string; label: string; movies: NinejaMovie[] }>> {
   const data = await fetchJson<{ sections?: Array<{ name: string; label: string; movies: NinejaMovie[] }> }>(
-    `${NINEJAROCKS_URL}/api/homepage`,
+    `${NINEJAROCKS_URL}/api/homepage?artwork=2`,
     { next: { revalidate: 900 }, provider: "ninejarocks" },
   )
   return data.sections || []
