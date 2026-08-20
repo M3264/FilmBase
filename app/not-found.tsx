@@ -1,39 +1,23 @@
 import { getNavLinks } from "@/lib/api"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { Film } from "lucide-react"
+import { SeoBreadcrumbs } from "@/components/seo-breadcrumbs"
 
 export default async function NotFound() {
-  const navLinks = await getNavLinks()
+  const navLinks = await getNavLinks().catch(() => ({ genres: [], categories: [], menuPages: [] }))
 
   return (
     <div className="min-h-screen flex flex-col">
       <Header navLinks={navLinks} />
 
-      <main className="flex-1 container mx-auto px-4 pt-24 pb-12 flex items-center justify-center">
-        <div className="text-center max-w-md">
-          <div className="mb-6 flex justify-center">
-            <div className="rounded-full bg-primary/10 p-6">
-              <Film className="h-16 w-16 text-primary" />
-            </div>
-          </div>
-
-          <h1 className="text-6xl font-bold mb-4">404</h1>
-          <h2 className="text-2xl font-semibold mb-4">Page Not Found</h2>
-          <p className="text-muted-foreground mb-8">The page you're looking for doesn't exist or has been moved.</p>
-
-          <div className="flex gap-4 justify-center">
-            <Link href="/">
-              <Button size="lg">Go Home</Button>
-            </Link>
-            <Link href="/search">
-              <Button size="lg" variant="outline">
-                Search Movies
-              </Button>
-            </Link>
-          </div>
+      <main className="site-shell flex-1 pb-16 pt-24 sm:pt-28">
+        <SeoBreadcrumbs items={[{ name: "Home", href: "/" }, { name: "Missing page" }]} />
+        <div className="border-y border-border py-12 sm:py-20">
+          <p className="eyebrow text-primary">Archive slip / 404</p>
+          <h1 className="mt-4 max-w-3xl text-[clamp(3.2rem,11vw,8rem)] font-black leading-[.78] tracking-[-.07em]">This shelf<br />is empty.</h1>
+          <p className="mt-6 max-w-lg text-sm leading-7 text-muted-foreground">The title or page may have moved. Search the catalogue or return to the front desk and keep browsing.</p>
+          <div className="mt-8 flex flex-wrap gap-5 text-sm font-bold"><Link href="/" className="border-2 border-foreground px-5 py-3 hover:bg-foreground hover:text-background">Front desk ↗</Link><Link href="/search" className="border-b-2 border-foreground px-1 py-3">Search the archive ↗</Link></div>
         </div>
       </main>
 

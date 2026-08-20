@@ -3,6 +3,7 @@ import { getNavLinks, getGenreMovies } from "@/lib/api"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { CatalogView } from "@/components/catalog-view"
+import { SeoBreadcrumbs } from "@/components/seo-breadcrumbs"
 
 function cleanTitle(title: string): string {
   return title
@@ -10,6 +11,12 @@ function cleanTitle(title: string): string {
     .replace(/\s*nkiri\s*/gi, "")
     .replace(/\s+archives\s*/gi, "")
     .trim()
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ path: string[] }> }): Promise<Metadata> {
+  const { path } = await params
+  const name = path.map((part) => part.replaceAll("-", " ")).join(" / ")
+  return { title: name, description: `Browse ${name} movies and series in the FilmBase catalogue.`, alternates: { canonical: `/category/${path.join("/")}` } }
 }
 
 export default async function SlugPage({
@@ -45,6 +52,7 @@ export default async function SlugPage({
         <Header navLinks={navLinks} />
 
         <main className="site-shell pb-16 pt-24 sm:pt-28">
+          <SeoBreadcrumbs items={[{ name: "Home", href: "/" }, { name: "Discover", href: "/discover" }, { name: cleanedTitle }]} />
           <header className="mb-8 border-y border-border">
             <div className="grid min-h-[15rem] gap-8 py-7 md:grid-cols-[minmax(0,1fr)_15rem] md:items-end md:py-10">
               <div className="min-w-0">
@@ -99,3 +107,4 @@ export default async function SlugPage({
     notFound()
   }
 }
+import type { Metadata } from "next"

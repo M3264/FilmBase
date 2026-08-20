@@ -8,6 +8,7 @@ import { MixedPosterWall } from "@/components/mixed-poster-wall"
 import { TransmissionStrip } from "@/components/transmission-strip"
 import { Footer } from "@/components/footer"
 import { publicAnimeImageUrl } from "@/lib/presentation-images"
+import { JsonLd } from "@/components/json-ld"
 
 export default async function HomePage() {
   const [navLinks, homeData, animeData] = await Promise.all([
@@ -33,6 +34,7 @@ export default async function HomePage() {
     <div className="min-h-screen">
       <Header navLinks={navLinks} />
       <main>
+        <JsonLd data={{ "@context": "https://schema.org", "@type": "WebSite", name: "FilmBase", url: "https://filmbase.fun", potentialAction: { "@type": "SearchAction", target: "https://filmbase.fun/search?q={search_term_string}", "query-input": "required name=search_term_string" } }} />
         <FeatureHero items={heroItems} />
         <TransmissionStrip genres={transmissionLinks} />
         <div className="club-home site-shell">

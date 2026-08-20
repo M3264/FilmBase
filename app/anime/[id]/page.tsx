@@ -6,6 +6,8 @@ import Image from "next/image"
 import Link from "next/link"
 import { ArrowLeft, Play } from "lucide-react"
 import { publicAnimeImageUrl } from "@/lib/presentation-images"
+import { JsonLd } from "@/components/json-ld"
+import { SeoBreadcrumbs, breadcrumbSchema } from "@/components/seo-breadcrumbs"
 
 const proxyImage = publicAnimeImageUrl
 
@@ -16,12 +18,12 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     const anime = response?.data ?? response
     const image = proxyImage(anime?.cover ?? anime?.poster)
     return {
-      title: `${anime?.title ?? "Anime"} - FilmBase`,
+      title: anime?.title ?? "Anime",
       description: anime?.synopsis?.slice(0, 160) ?? `Explore ${anime?.title} on FilmBase`,
       openGraph: { title: anime?.title ?? "Anime", description: anime?.synopsis?.slice(0, 160) ?? "", images: image ? [{ url: image }] : [], type: "video.tv_show" },
       twitter: { card: "summary_large_image", title: anime?.title ?? "Anime", description: anime?.synopsis?.slice(0, 160) ?? "", images: image ? [image] : [] },
     }
-  } catch { return { title: "Anime - FilmBase" } }
+  } catch { return { title: "Anime" } }
 }
 
 export default async function AnimeDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -51,11 +53,15 @@ export default async function AnimeDetailPage({ params }: { params: Promise<{ id
 
   const coverImg = proxyImage(anime.cover ?? anime.poster)
   const metadata = [anime.status && ["Status", anime.status], anime.season && ["Season", anime.season], anime.episodes_count && ["Episodes", anime.episodes_count]].filter(Boolean) as [string, string | number][]
+  const name = anime.title || "Untitled anime"
+  const breadcrumbs = [{ name: "Home", href: "/" }, { name: "Anime", href: "/anime" }, { name }]
 
   return (
     <div className="min-h-screen">
       <Header navLinks={navLinks} />
       <main className="site-shell pt-24 pb-14 sm:pt-28">
+        <JsonLd data={[breadcrumbSchema(breadcrumbs), { "@context": "https://schema.org", "@type": "TVSeries", name, url: `https://filmbase.fun/anime/${encodeURIComponent(id)}`, ...(anime.synopsis ? { description: anime.synopsis } : {}), ...(coverImg ? { image: coverImg } : {}) }]} />
+        <SeoBreadcrumbs items={breadcrumbs} />
         <Link href="/anime" className="mb-7 inline-flex items-center gap-2 py-2 text-sm text-muted-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><ArrowLeft className="h-4 w-4" /> Back to the broadcast board</Link>
 
         <article className="grid gap-7 border-y border-border py-7 md:grid-cols-[minmax(220px,320px)_1fr] md:gap-12 md:py-10">
@@ -66,7 +72,7 @@ export default async function AnimeDetailPage({ params }: { params: Promise<{ id
 
           <div className="flex min-w-0 flex-col md:py-3">
             <p className="eyebrow text-primary">Late-night series file / {episodes.length ? `${episodes.length} transmissions` : "Schedule pending"}</p>
-            <h1 className="mt-4 break-words text-[clamp(2.8rem,9vw,6.5rem)] font-black leading-[.84] tracking-[-.065em]">{anime.title || "Untitled anime"}</h1>
+            <h1 className="mt-4 break-words text-[clamp(2.8rem,9vw,6.5rem)] font-black leading-[.84] tracking-[-.065em]">{name}</h1>
             {metadata.length > 0 && <dl className="mt-7 grid grid-cols-2 border-y border-border sm:grid-cols-3">{metadata.map(([label, value]) => <div key={label} className="border-r border-border px-3 py-4 first:pl-0 last:border-r-0"><dt className="eyebrow text-muted-foreground">{label}</dt><dd className="mt-2 text-sm font-semibold">{value}</dd></div>)}</dl>}
             {anime.synopsis && <section className="mt-7 grid gap-3 sm:grid-cols-[7rem_1fr]"><h2 className="eyebrow pt-1 text-primary">Case notes</h2><p className="max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">{anime.synopsis}</p></section>}
           </div>

@@ -4,10 +4,11 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import Link from "next/link"
 import { ArrowDownToLine, ArrowLeft, ExternalLink } from "lucide-react"
+import { SeoBreadcrumbs } from "@/components/seo-breadcrumbs"
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string; ep: string }> }): Promise<Metadata> {
   const { ep } = await params
-  return { title: `Episode ${ep} - FilmBase Anime`, description: `Download anime episode ${ep} from explicit source offers on FilmBase.` }
+  return { title: `Anime episode ${ep}`, description: `Download anime episode ${ep} from explicit source offers on FilmBase.` }
 }
 
 export default async function AnimeEpisodePage({ params }: { params: Promise<{ id: string; ep: string }> }) {
@@ -30,6 +31,7 @@ export default async function AnimeEpisodePage({ params }: { params: Promise<{ i
     <div className="min-h-screen">
       <Header navLinks={navLinks} />
       <main className="site-shell pt-24 pb-14 sm:pt-28">
+        <SeoBreadcrumbs items={[{ name: "Home", href: "/" }, { name: "Anime", href: "/anime" }, { name: episode?.anime_title ?? "Series", href: `/anime/${encodeURIComponent(id)}` }, { name: `Episode ${ep}` }]} />
         <Link href={`/anime/${encodeURIComponent(id)}`} className="mb-7 inline-flex items-center gap-2 py-2 text-sm text-muted-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><ArrowLeft className="h-4 w-4" /> Back to episode guide</Link>
 
         <header className="grid border-y border-border lg:grid-cols-[1fr_15rem]">
