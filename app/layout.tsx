@@ -2,9 +2,7 @@ import type React from "react"
 import type { Metadata } from "next"
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
-import { Suspense } from "react"
 import { ThemeProvider } from "@/components/theme-provider"
-import { LoadingOverlay } from "@/components/loading-overlay"
 import { PwaRegister } from "@/components/pwa-register"
 import "./globals.css"
 
@@ -38,10 +36,7 @@ export default function RootLayout({
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
         <ThemeProvider>
           <PwaRegister />
-          <LoadingOverlay />
-          <Suspense fallback={<div>Loading...</div>}>
-            {children}
-          </Suspense>
+          {children}
         </ThemeProvider>
       </body>
     </html>
