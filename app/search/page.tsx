@@ -4,7 +4,6 @@ import { MovieCard } from "@/components/movie-card"
 import { Footer } from "@/components/footer"
 import Link from "next/link"
 import { SearchForm } from "@/components/search-form"
-import { AdSlot } from "@/components/ad-slot"
 import { publicAnimeImageUrl } from "@/lib/presentation-images"
 
 const proxyImage = publicAnimeImageUrl
@@ -94,8 +93,6 @@ export default async function SearchPage({
           </div>
         </header>
 
-        <AdSlot placement="catalogue-top" className="my-7" />
-
         <div className="mb-8 grid border-b border-border sm:grid-cols-[1fr_1fr_auto]">
           <Link
             href={`/search?q=${encodeURIComponent(query)}&tab=movies`}
@@ -138,7 +135,6 @@ export default async function SearchPage({
             </div>
           ) : <EmptyResult query={query} alternateHref={`/search?q=${encodeURIComponent(query)}&tab=movies`} alternateLabel="Check movies & series" />
         )}
-        <AdSlot placement="catalogue-inline" className="mt-10" />
       </main>
       <Footer />
     </div>

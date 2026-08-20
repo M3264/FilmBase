@@ -2,7 +2,6 @@ import { getNavLinks } from "@/lib/api"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { AnimeGrid } from "@/components/anime-grid"
-import { AdSlot } from "@/components/ad-slot"
 
 export default async function AnimePage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
   const navLinks = await getNavLinks().catch(() => ({ genres: [], categories: [], menuPages: [] }))
@@ -34,8 +33,6 @@ export default async function AnimePage({ searchParams }: { searchParams: Promis
             </p>
           </div>
         </header>
-
-        <div className="my-8"><AdSlot placement="catalogue-top" compact /></div>
 
         <AnimeGrid page={page} />
       </main>

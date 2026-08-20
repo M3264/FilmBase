@@ -4,7 +4,6 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import Link from "next/link"
 import { ArrowDownToLine, ArrowLeft, ExternalLink } from "lucide-react"
-import { AdSlot } from "@/components/ad-slot"
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string; ep: string }> }): Promise<Metadata> {
   const { ep } = await params
@@ -45,8 +44,6 @@ export default async function AnimeEpisodePage({ params }: { params: Promise<{ i
           </div>
         </header>
 
-        <div className="my-8"><AdSlot placement="episode-top" compact /></div>
-
         <section className="mx-auto max-w-4xl" aria-labelledby="download-offers">
           <div className="mb-5 border-b-2 border-foreground pb-3">
             <p className="eyebrow mb-2 text-primary">Explicit external offers</p>
@@ -63,7 +60,6 @@ export default async function AnimeEpisodePage({ params }: { params: Promise<{ i
             </a>
           })}</div> : <div className="border border-dashed border-border px-6 py-14 text-center"><p className="eyebrow text-primary">File desk empty</p><h3 className="display-type mt-3 text-3xl font-black uppercase">Nothing ready to collect</h3><p className="mx-auto mt-3 max-w-md text-sm leading-6 text-muted-foreground">No download offers are available for this episode right now.</p><Link href={`/anime/${encodeURIComponent(id)}`} className="mt-6 inline-block border border-foreground px-5 py-3 text-sm font-semibold hover:bg-foreground hover:text-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">Choose another episode</Link></div>}
         </section>
-        <div className="mt-12"><AdSlot placement="download-after" /></div>
       </main>
       <Footer />
     </div>

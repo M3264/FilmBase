@@ -5,7 +5,6 @@ import { Footer } from "@/components/footer"
 import Image from "next/image"
 import Link from "next/link"
 import { ArrowLeft, Play } from "lucide-react"
-import { AdSlot } from "@/components/ad-slot"
 import { publicAnimeImageUrl } from "@/lib/presentation-images"
 
 const proxyImage = publicAnimeImageUrl
@@ -70,7 +69,6 @@ export default async function AnimeDetailPage({ params }: { params: Promise<{ id
             <h1 className="mt-4 break-words text-[clamp(2.8rem,9vw,6.5rem)] font-black leading-[.84] tracking-[-.065em]">{anime.title || "Untitled anime"}</h1>
             {metadata.length > 0 && <dl className="mt-7 grid grid-cols-2 border-y border-border sm:grid-cols-3">{metadata.map(([label, value]) => <div key={label} className="border-r border-border px-3 py-4 first:pl-0 last:border-r-0"><dt className="eyebrow text-muted-foreground">{label}</dt><dd className="mt-2 text-sm font-semibold">{value}</dd></div>)}</dl>}
             {anime.synopsis && <section className="mt-7 grid gap-3 sm:grid-cols-[7rem_1fr]"><h2 className="eyebrow pt-1 text-primary">Case notes</h2><p className="max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">{anime.synopsis}</p></section>}
-            <div className="mt-auto pt-7"><AdSlot placement="detail-inline" compact /></div>
           </div>
         </article>
 
@@ -88,7 +86,6 @@ export default async function AnimeDetailPage({ params }: { params: Promise<{ id
             </div>
           ) : <div className="border border-dashed border-border px-6 py-12 text-center"><p className="text-sm text-muted-foreground">No episodes have been logged for this series yet.</p></div>}
         </section>
-        <div className="mt-12"><AdSlot placement="catalogue-inline" /></div>
       </main>
       <Footer />
     </div>

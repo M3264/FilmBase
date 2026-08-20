@@ -2,7 +2,6 @@ import Link from "next/link"
 import { getDiscoveryIndex, getNavLinks } from "@/lib/api"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { AdSlot } from "@/components/ad-slot"
 
 export default async function DiscoverPage() {
   const [navLinks, fetchedIndex] = await Promise.all([
@@ -19,7 +18,6 @@ export default async function DiscoverPage() {
           <p className="border-l-4 border-primary pl-5 text-sm leading-7 text-muted-foreground">Browse by mood, shelf or first letter. No algorithmic prophecy—just useful ways into the FilmBase archive.</p>
         </header>
         <section className="py-10" aria-labelledby="collections"><div className="mb-5 flex items-end justify-between border-b-2 border-foreground pb-3"><div><p className="eyebrow text-primary">Start somewhere lively</p><h2 id="collections" className="mt-2 text-3xl font-black tracking-[-.04em]">Counter selections</h2></div><span className="data-type text-[10px] uppercase text-muted-foreground">03 crates</span></div><div className="grid border-l border-t border-border md:grid-cols-3">{index.collections.map((item, i) => <Link key={item.id} href={`/discover/${item.id}`} className="group min-h-48 border-b border-r border-border p-5 hover:bg-primary hover:text-primary-foreground"><span className="data-type text-xs">0{i + 1}</span><strong className="mt-16 flex items-end justify-between text-2xl tracking-[-.04em]"><span>{item.label}</span><span>↗</span></strong></Link>)}</div></section>
-        <AdSlot placement="catalogue-top" />
         <section className="py-10" aria-labelledby="categories"><div className="mb-5 border-b-2 border-foreground pb-3"><p className="eyebrow text-primary">Named crates</p><h2 id="categories" className="mt-2 text-3xl font-black tracking-[-.04em]">Browse by shelf</h2></div><div className="grid border-l border-t border-border sm:grid-cols-2 lg:grid-cols-3">{index.categories.map((item, i) => <Link key={item.id} href={`/discover/category/${item.id}`} className="flex min-h-16 items-center justify-between gap-3 border-b border-r border-border px-4 py-3 text-sm font-semibold hover:bg-secondary"><span><small className="mr-3 data-type text-[9px] text-primary">{String(i + 1).padStart(2, "0")}</small>{item.label}</span><span>→</span></Link>)}</div></section>
         <section className="py-10"><div className="mb-5 border-b-2 border-foreground pb-3"><p className="eyebrow text-primary">Old-school index</p><h2 className="mt-2 text-3xl font-black tracking-[-.04em]">A to Z</h2></div><div className="grid grid-cols-7 border-l border-t border-border sm:grid-cols-13">{index.letters.map((letter) => <Link key={letter} href={`/discover/a-z/${letter.toLowerCase()}`} className="grid aspect-square place-items-center border-b border-r border-border data-type text-xs font-bold hover:bg-foreground hover:text-background">{letter}</Link>)}</div></section>
       </main>

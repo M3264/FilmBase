@@ -5,7 +5,6 @@ import { GeistMono } from "geist/font/mono"
 import { Suspense } from "react"
 import { ThemeProvider } from "@/components/theme-provider"
 import { LoadingOverlay } from "@/components/loading-overlay"
-import { AdNetwork } from "@/components/ad-network"
 import { PwaRegister } from "@/components/pwa-register"
 import "./globals.css"
 
@@ -34,7 +33,6 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
         <ThemeProvider>
-          <AdNetwork />
           <PwaRegister />
           <LoadingOverlay />
           <Suspense fallback={<div>Loading...</div>}>

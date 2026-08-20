@@ -7,7 +7,6 @@ import { ClubSection } from "@/components/club-section"
 import { MixedPosterWall } from "@/components/mixed-poster-wall"
 import { TransmissionStrip } from "@/components/transmission-strip"
 import { Footer } from "@/components/footer"
-import { AdSlot } from "@/components/ad-slot"
 import { publicAnimeImageUrl } from "@/lib/presentation-images"
 
 export default async function HomePage() {
@@ -38,11 +37,9 @@ export default async function HomePage() {
         <TransmissionStrip genres={transmissionLinks} />
         <div className="club-home site-shell">
           <MixedPosterWall groups={wallSections} />
-          <AdSlot placement="catalogue-top" className="mb-[clamp(4rem,9vw,8rem)]" />
           {counterSections.length > 0 && <ClubFloor sections={counterSections} />}
           {sections.slice(4, 8).map((section, index) => <ClubSection key={`${section.title}-${index}`} section={section} mode={(["strip", "schedule", "wall"] as const)[index % 3]} moreLink={index === 0 ? "/discover/trending" : "/discover/latest"} />)}
           {animeSection && <ClubSection mode="schedule" section={animeSection} moreLink="/anime" />}
-          <AdSlot placement="catalogue-inline" className="mb-[clamp(4rem,9vw,8rem)]" />
           <section className="club-directory">
             <div><p className="eyebrow">Every shelf, one doorway</p><h2>Browse without guessing.</h2></div>
             <div className="club-directory-links">

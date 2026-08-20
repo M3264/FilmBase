@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { usePathname } from "next/navigation"
 import { Download, X } from "lucide-react"
 
 interface InstallPromptEvent extends Event {
@@ -10,20 +9,12 @@ interface InstallPromptEvent extends Event {
 }
 
 export function PwaRegister() {
-  const pathname = usePathname()
   const [installEvent, setInstallEvent] = useState<InstallPromptEvent | null>(null)
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
-    const adFreeStream = pathname === "/movie/local-spider-man-brand-new-day-2026"
-    // Keep one root-scoped worker: /sw.js is also required by FilmBase's
-    // publisher integration, and a second worker would replace it.
     if ("serviceWorker" in navigator) {
-      if (adFreeStream) {
-        navigator.serviceWorker.getRegistrations().then((registrations) => registrations.forEach((registration) => registration.unregister())).catch(() => undefined)
-      } else {
-        navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => undefined)
-      }
+      navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => undefined)
     }
     const onBeforeInstall = (event: Event) => {
       event.preventDefault()
@@ -32,7 +23,7 @@ export function PwaRegister() {
     }
     window.addEventListener("beforeinstallprompt", onBeforeInstall)
     return () => window.removeEventListener("beforeinstallprompt", onBeforeInstall)
-  }, [pathname])
+  }, [])
 
   if (!visible || !installEvent) return null
 

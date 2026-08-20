@@ -3,7 +3,6 @@ import { getNavLinks, getGenreMovies } from "@/lib/api"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { CatalogView } from "@/components/catalog-view"
-import { AdSlot } from "@/components/ad-slot"
 
 function cleanTitle(title: string): string {
   return title
@@ -67,11 +66,7 @@ export default async function SlugPage({
             </div>
           </header>
 
-          <AdSlot placement="catalogue-top" className="mb-8" />
-
           <CatalogView items={genreData.items} />
-
-          <AdSlot placement="catalogue-inline" className="mt-10" />
 
           {genreData.totalPages > 1 && (
             <nav className="mt-12 grid border-y border-border sm:grid-cols-[1fr_auto_1fr]" aria-label="Catalogue pages">
