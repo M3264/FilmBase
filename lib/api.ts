@@ -192,12 +192,45 @@ export async function getTitleOffers(idOrPath: string): Promise<SourceOffer[]> {
   const ref = parseReference(idOrPath)
   if (ref.provider === "ninejarocks") {
     const detail = await ninejaDetail(ref.id)
-    return ninejaOffers(ref.id, detail)
+    const offers = ninejaOffers(ref.id, detail)
+    if (offers.length && offers.every((offer) => offerMatchesTitle(offer, detail.title))) return offers
+    const fallback = await legacyOffersForTitle(detail.title)
+    return fallback.length ? fallback : offers
   }
   if (ref.provider === "legacy") return legacyOffers(await getMovieDetailsLegacy(ref.id))
   const ninejaId = idOrPath.match(/(?:^|-)id(\d+)(?:\.html)?$/)?.[1] || (/^\d+$/.test(idOrPath) ? idOrPath : null)
   if (ninejaId) return ninejaOffers(ninejaId, await ninejaDetail(ninejaId))
   return legacyOffers(await getMovieDetailsLegacy(idOrPath))
+}
+
+async function legacyOffersForTitle(title: string): Promise<SourceOffer[]> {
+  try {
+    const result = await searchMoviesLegacy(comparableTitle(title), 1)
+    const wanted = comparableTitle(title)
+    const exact = result.items.find((item) => comparableTitle(item.title) === wanted)
+      || result.items.find((item) => comparableTitle(item.title).includes(wanted) || wanted.includes(comparableTitle(item.title)))
+    if (!exact) return []
+    return legacyOffers(await getMovieDetailsLegacy(exact.path))
+  } catch {
+    return []
+  }
+}
+
+function comparableTitle(value: string): string {
+  return value.toLowerCase()
+    .replace(/\b(19|20)\d{2}\b/g, " ")
+    .replace(/\b(?:korean|nollywood|bollywood|chinese|japanese|filipino|movie|film)\b/g, " ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+}
+
+function offerMatchesTitle(offer: SourceOffer, title: string): boolean {
+  let filename = offer.url
+  try { filename = decodeURIComponent(new URL(offer.url).pathname) } catch { /* retain URL text */ }
+  const tokens = title.toLowerCase().replace(/\b(19|20)\d{2}\b/g, " ").match(/[a-z0-9]{4,}/g) || []
+  if (!tokens.length) return true
+  const haystack = filename.toLowerCase()
+  return tokens.some((token) => haystack.includes(token))
 }
 
 export async function getCatalogDetail(idOrPath: string): Promise<{ title: CatalogTitle; offers: SourceOffer[] }> {
