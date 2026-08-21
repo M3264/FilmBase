@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { Suspense } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { ExternalLink } from "lucide-react"
@@ -29,7 +30,6 @@ export default async function MoviePage({ params }: { params: Promise<{ path: st
   const { path } = await params
   const moviePath = path.join("/")
   const [{ title, offers }, navLinks] = await Promise.all([getCatalogDetail(moviePath), getNavLinks().catch(() => ({ genres: [], categories: [], menuPages: [] }))])
-  const related = await getRelatedCatalogTitles(title, 8)
   const name = displayTitle(title.title)
   const groupedOffers = groupOffers(offers)
   const repeatedSeriesSize = offers.length > 6
@@ -83,11 +83,23 @@ export default async function MoviePage({ params }: { params: Promise<{ path: st
           {offers.length ? <div className="space-y-3">{groupedOffers.map((group, groupIndex) => group.season ? <details key={group.key} open={groupIndex === 0} className="group border border-foreground bg-card"><summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-4 bg-secondary px-4 py-3 hover:bg-primary hover:text-primary-foreground"><span><small className="data-type text-[9px] uppercase text-muted-foreground group-open:text-primary">Season crate</small><strong className="mt-1 block text-lg">Season {String(group.season).padStart(2, "0")}</strong></span><span className="flex items-center gap-4"><b className="data-type text-[10px] uppercase">{group.items.length} episodes</b><i className="text-xl not-italic group-open:rotate-45">+</i></span></summary><div className="grid gap-px bg-border p-px md:grid-cols-2">{group.items.map(({ offer, index }) => <DownloadButton compact key={offer.id} index={index} text={offer.label} season={String(group.season)} episode={offer.episode ? String(offer.episode) : undefined} fileSize={repeatedSeriesSize ? undefined : offer.size || undefined} codec={[offer.quality, offer.codec, offer.container].filter(Boolean).join(" · ")} sourceHost={offer.externalHost} prepareDownload={prepareTitleOffer.bind(null, moviePath, index)} />)}</div></details> : <div key={group.key} className="space-y-2">{group.items.map(({ offer, index }) => <DownloadButton key={offer.id} index={index} text={offer.label} fileSize={offer.size || undefined} codec={[offer.quality, offer.codec, offer.container].filter(Boolean).join(" · ")} sourceHost={offer.externalHost} prepareDownload={prepareTitleOffer.bind(null, moviePath, index)} />)}</div>)}</div> : <div className="border border-dashed border-border p-10 text-center"><p className="eyebrow text-primary">Offer tray empty</p><h3 className="mt-3 text-2xl font-black">No verified file is available yet.</h3><p className="mt-3 text-sm text-muted-foreground">Try another title or return later; promotional redirects are intentionally excluded.</p><Link href="/discover" className="mt-6 inline-flex border-2 border-foreground px-5 py-3 text-sm font-bold hover:bg-foreground hover:text-background">Browse another shelf →</Link></div>}
         </section>
         <aside className="mx-auto mt-12 flex max-w-5xl items-start gap-3 border-t border-border pt-5 text-xs leading-5 text-muted-foreground"><ExternalLink className="mt-0.5 h-4 w-4 shrink-0" /><p>External hosts control their own availability and file delivery. Check the filename and size before saving. <Link href="/help#broken-files" className="font-bold text-foreground underline underline-offset-4">Report a broken offer</Link>.</p></aside>
-        {related.length > 0 && <section className="mt-16 border-t border-border pt-7" aria-labelledby="related-heading"><div className="mb-7 flex items-end justify-between gap-4"><div><p className="eyebrow text-primary">{hasAdFreeStream ? "The Spider-Man shelf" : "From nearby shelves"}</p><h2 id="related-heading" className="mt-2 text-3xl font-black tracking-[-.045em] sm:text-4xl">{hasAdFreeStream ? "More Spider-Man" : "Related titles"}</h2></div><Link href="/discover" className="border-b-2 border-foreground pb-1 text-xs font-bold uppercase tracking-[.08em]">Browse all ↗</Link></div><div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">{related.map((item, index) => <MovieCard key={item.id} movie={catalogToMovieItem(item)} index={index} />)}</div></section>}
+        <Suspense fallback={<RelatedTitlesSkeleton />}>
+          <RelatedTitles title={title} hasAdFreeStream={hasAdFreeStream} />
+        </Suspense>
       </main>
       <Footer />
     </div>
   )
+}
+
+async function RelatedTitles({ title, hasAdFreeStream }: { title: Awaited<ReturnType<typeof getCatalogDetail>>["title"]; hasAdFreeStream: boolean }) {
+  const related = await getRelatedCatalogTitles(title, 8)
+  if (!related.length) return null
+  return <section className="mt-16 border-t border-border pt-7" aria-labelledby="related-heading"><div className="mb-7 flex items-end justify-between gap-4"><div><p className="eyebrow text-primary">{hasAdFreeStream ? "The Spider-Man shelf" : "From nearby shelves"}</p><h2 id="related-heading" className="mt-2 text-3xl font-black tracking-[-.045em] sm:text-4xl">{hasAdFreeStream ? "More Spider-Man" : "Related titles"}</h2></div><Link href="/discover" className="border-b-2 border-foreground pb-1 text-xs font-bold uppercase tracking-[.08em]">Browse all ↗</Link></div><div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">{related.map((item, index) => <MovieCard key={item.id} movie={catalogToMovieItem(item)} index={index} />)}</div></section>
+}
+
+function RelatedTitlesSkeleton() {
+  return <section className="mt-16 border-t border-border pt-7" aria-label="Loading related titles" aria-busy="true"><div className="mb-7"><div className="h-3 w-32 animate-pulse bg-secondary" /><div className="mt-3 h-9 w-52 animate-pulse bg-secondary" /></div><div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">{Array.from({ length: 6 }, (_, index) => <div key={index}><div className="aspect-[2/3] animate-pulse bg-secondary" /><div className="mt-3 h-3 w-4/5 animate-pulse bg-secondary" /></div>)}</div></section>
 }
 
 function groupOffers(offers: Awaited<ReturnType<typeof getCatalogDetail>>["offers"]) {
