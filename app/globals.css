@@ -350,8 +350,12 @@
 /* FilmBase shelf-rail navigation */
 .archive-header { position: fixed; inset: 0 0 auto; z-index: 50; border-bottom: 1px solid var(--foreground); background: color-mix(in srgb,var(--background) 96%,transparent); }
 .archive-nav-progress { position: fixed; z-index: 100; inset: 0 auto auto 0; width: 38%; height: 3px; background: var(--primary); animation: archive-nav-progress 1.15s cubic-bezier(.22,.61,.36,1) infinite; transform-origin: left center; }
+.archive-nav-status { position: fixed; z-index: 101; top: .7rem; right: clamp(4.5rem, 8vw, 7rem); display: inline-flex; align-items: center; gap: .45rem; padding: .42rem .55rem; border: 1px solid var(--foreground); background: var(--primary); color: var(--primary-foreground); box-shadow: 3px 3px 0 var(--foreground); font: 700 .55rem/1 var(--font-geist-mono),monospace; letter-spacing: .08em; text-transform: uppercase; animation: archive-nav-status-in .18s ease-out both; }
+.archive-nav-status i { width: .42rem; height: .42rem; border: 1px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: archive-nav-spin .7s linear infinite; }
 .archive-header[data-navigation-pending] .archive-rail a:not(.active) { color: color-mix(in srgb,var(--foreground) 58%,var(--muted-foreground)); }
 @keyframes archive-nav-progress { 0% { transform: scaleX(.15); opacity: .5; } 55% { transform: scaleX(1.9); opacity: 1; } 100% { transform: scaleX(2.6); opacity: .35; } }
+@keyframes archive-nav-status-in { from { transform: translateY(-.35rem); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes archive-nav-spin { to { transform: rotate(360deg); } }
 .archive-header-main { min-height: 4.5rem; display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: stretch; gap: 1rem; }
 .archive-brand { display: flex; align-items: center; gap: .75rem; padding-right: 1rem; }
 .archive-brand-stamp { display: grid; place-items: center; width: 2.15rem; height: 2.15rem; border: 2px solid var(--foreground); background: var(--primary); color: var(--primary-foreground); box-shadow: 3px 3px 0 var(--foreground); font: 800 .68rem/1 var(--font-geist-mono),monospace; transform: rotate(-2deg); }
@@ -405,6 +409,7 @@
   .archive-brand small,.archive-tools .data-type { display: none; }
   .archive-brand b { font-size: 1rem; }
   .archive-tools > button { min-width: 2.55rem; }
+  .archive-nav-status { top: .55rem; right: 3.7rem; padding: .36rem .45rem; font-size: .48rem; }
   .archive-search form { grid-template-columns: auto minmax(0,1fr); }
   .archive-search form > button { grid-column: 1 / -1; min-height: 2.8rem; }
   .archive-search-tag { padding-inline: .7rem; writing-mode: vertical-rl; }

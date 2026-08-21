@@ -28,6 +28,7 @@ export function Header({ navLinks }: { navLinks: NavLinks }) {
   const [query, setQuery] = useState("")
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
   const [navigationPending, setNavigationPending] = useState(false)
+  const navigationStarted = useRef<number | null>(null)
   const router = useRouter()
   const pathname = usePathname()
   const debounce = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -51,21 +52,30 @@ export function Header({ navLinks }: { navLinks: NavLinks }) {
     return () => window.removeEventListener("keydown", close)
   }, [])
 
-  useEffect(() => { setMenuOpen(false); setSearchOpen(false); setShelvesOpen(false); setNavigationPending(false) }, [pathname])
+  useEffect(() => {
+    setMenuOpen(false); setSearchOpen(false); setShelvesOpen(false)
+    const started = navigationStarted.current
+    if (!started) { setNavigationPending(false); return }
+    const remaining = Math.max(0, 420 - (performance.now() - started))
+    const timer = window.setTimeout(() => { setNavigationPending(false); navigationStarted.current = null }, remaining)
+    return () => window.clearTimeout(timer)
+  }, [pathname])
 
-  const search = (event: React.FormEvent) => { event.preventDefault(); if (query.trim()) { setNavigationPending(true); router.push(`/search?q=${encodeURIComponent(query.trim())}`) } }
+  const beginNavigation = () => { navigationStarted.current = performance.now(); setNavigationPending(true) }
+  const search = (event: React.FormEvent) => { event.preventDefault(); if (query.trim()) { beginNavigation(); router.push(`/search?q=${encodeURIComponent(query.trim())}`) } }
 
   const handleNavigationClick = (event: React.MouseEvent<HTMLElement>) => {
     if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
     const link = (event.target as HTMLElement).closest("a")
     if (!link || link.target === "_blank" || link.hasAttribute("download")) return
     const url = new URL(link.href, window.location.href)
-    if (url.origin === window.location.origin && url.pathname !== pathname) setNavigationPending(true)
+    if (url.origin === window.location.origin && url.pathname !== pathname) beginNavigation()
   }
 
   return (
     <header className="archive-header" data-navigation-pending={navigationPending || undefined} onClick={handleNavigationClick} aria-busy={navigationPending || undefined}>
-      {navigationPending ? <span className="archive-nav-progress" aria-label="Opening shelf" role="status" /> : null}
+      {navigationPending ? <span className="archive-nav-progress" aria-hidden="true" /> : null}
+      {navigationPending ? <span className="archive-nav-status" role="status">Opening shelf <i aria-hidden="true" /></span> : null}
       <div className="site-shell archive-header-main">
         <Link href="/" className="archive-brand" aria-label="FilmBase home">
           <span className="archive-brand-stamp">FB</span>

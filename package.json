@@ -6,6 +6,7 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "tsc --noEmit",
+    "route-check": "sh ops/filmbase-route-check.sh",
     "typecheck": "tsc --noEmit",
     "start": "next start"
   },

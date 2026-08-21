@@ -1,0 +1,8 @@
+[Unit]
+Description=Check public FilmBase routes
+After=network-online.target filmbase-preview.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/filmbase-route-check

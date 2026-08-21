@@ -234,8 +234,37 @@ function offerMatchesTitle(offer: SourceOffer, title: string): boolean {
 }
 
 export async function getCatalogDetail(idOrPath: string): Promise<{ title: CatalogTitle; offers: SourceOffer[] }> {
+  const ref = parseReference(idOrPath)
+  if (ref.provider === "ninejarocks") {
+    const detail = await ninejaDetail(ref.id)
+    const title = normalizeNinejaDetail(ref.id, detail)
+    const offers = ninejaOffers(ref.id, detail)
+    if (offers.length && offers.every((offer) => offerMatchesTitle(offer, detail.title))) return { title, offers }
+    const fallback = await legacyOffersForTitle(detail.title)
+    return { title, offers: fallback.length ? fallback : offers }
+  }
+  if (ref.provider === "legacy") {
+    const detail = await getMovieDetailsLegacy(ref.id)
+    return { title: await enrichLegacyDetail(normalizeLegacyDetail(detail), detail), offers: legacyOffers(detail) }
+  }
+  const ninejaId = idOrPath.match(/(?:^|-)id(\d+)(?:\.html)?$/)?.[1] || (/^\d+$/.test(idOrPath) ? idOrPath : null)
+  if (ninejaId) {
+    const detail = await ninejaDetail(ninejaId)
+    return { title: normalizeNinejaDetail(ninejaId, detail), offers: ninejaOffers(ninejaId, detail) }
+  }
   const [title, offers] = await Promise.all([getCatalogTitle(idOrPath), getTitleOffers(idOrPath)])
   return { title, offers }
+}
+
+async function enrichLegacyDetail(title: CatalogTitle, detail: LegacyDetails): Promise<CatalogTitle> {
+  try {
+    const result = await searchMoviesLegacy(detail.title, 1)
+    const normalizedPath = detail.path.replace(/^\/+|\/+$/g, "")
+    const artwork = result.items.find((item) => item.path.replace(/^\/+|\/+$/g, "") === normalizedPath)
+      || result.items.find((item) => item.title.trim().toLowerCase() === detail.title.trim().toLowerCase())
+    if (artwork?.imageUrl) return { ...title, imageUrl: artwork.imageUrl, backdropUrl: artwork.imageUrl }
+  } catch { /* detail remains usable when the artwork lookup is unavailable */ }
+  return title
 }
 
 export async function resolveSourceOffer(offer: SourceOffer): Promise<{ url: string; externalHost: string }> {
@@ -324,12 +353,12 @@ export async function resolveDownloadLink(intermediateUrl: string): Promise<{ fi
 }
 
 async function searchMoviesLegacy(query: string, page = 1): Promise<SearchResult> {
-  const data = await legacyJson<{ data?: SearchResult }>(`/api/search?query=${encodeURIComponent(query)}&page=${page}`, { cache: "no-store" })
+  const data = await legacyJson<{ data?: SearchResult }>(`/api/search?query=${encodeURIComponent(query)}&page=${page}`, { next: { revalidate: 300 } })
   return data.data || { listTitle: query, currentPage: page, totalPages: 1, items: [] }
 }
 
 async function getMovieDetailsLegacy(path: string): Promise<MovieDetails> {
-  const data = await legacyJson<{ data?: MovieDetails }>(`/api/movie/${encodeURIComponent(path)}`, { cache: "no-store" })
+  const data = await legacyJson<{ data?: MovieDetails }>(`/api/movie/${encodeURIComponent(path)}`, { next: { revalidate: 300 } })
   if (!data.data) throw new CatalogApiError("Title was not found", "NOT_FOUND", 404, "legacy")
   return data.data
 }
@@ -352,7 +381,7 @@ async function getLegacyCatalogTitle(path: string): Promise<CatalogTitle> {
 
 async function getGenreMoviesLegacy(genre: string, page = 1): Promise<SearchResult> {
   const cleanGenre = genre.replace(/\/$/, "")
-  const data = await legacyJson<{ data?: SearchResult }>(`/api/list/${cleanGenre}?page=${page}`, { cache: "no-store" })
+  const data = await legacyJson<{ data?: SearchResult }>(`/api/list/${cleanGenre}?page=${page}`, { next: { revalidate: 900 } })
   return data.data || { listTitle: cleanGenre, currentPage: page, totalPages: 1, items: [] }
 }
 

@@ -1,0 +1,12 @@
+[Unit]
+Description=Check public FilmBase routes every five minutes
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=5min
+AccuracySec=30s
+Unit=filmbase-route-check.service
+Persistent=true
+
+[Install]
+WantedBy=timers.target
