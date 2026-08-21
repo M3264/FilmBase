@@ -27,6 +27,7 @@ export function Header({ navLinks }: { navLinks: NavLinks }) {
   const [shelvesOpen, setShelvesOpen] = useState(false)
   const [query, setQuery] = useState("")
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
+  const [navigationPending, setNavigationPending] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
   const debounce = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -50,12 +51,21 @@ export function Header({ navLinks }: { navLinks: NavLinks }) {
     return () => window.removeEventListener("keydown", close)
   }, [])
 
-  useEffect(() => { setMenuOpen(false); setSearchOpen(false); setShelvesOpen(false) }, [pathname])
+  useEffect(() => { setMenuOpen(false); setSearchOpen(false); setShelvesOpen(false); setNavigationPending(false) }, [pathname])
 
-  const search = (event: React.FormEvent) => { event.preventDefault(); if (query.trim()) router.push(`/search?q=${encodeURIComponent(query.trim())}`) }
+  const search = (event: React.FormEvent) => { event.preventDefault(); if (query.trim()) { setNavigationPending(true); router.push(`/search?q=${encodeURIComponent(query.trim())}`) } }
+
+  const handleNavigationClick = (event: React.MouseEvent<HTMLElement>) => {
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+    const link = (event.target as HTMLElement).closest("a")
+    if (!link || link.target === "_blank" || link.hasAttribute("download")) return
+    const url = new URL(link.href, window.location.href)
+    if (url.origin === window.location.origin && url.pathname !== pathname) setNavigationPending(true)
+  }
 
   return (
-    <header className="archive-header">
+    <header className="archive-header" data-navigation-pending={navigationPending || undefined} onClick={handleNavigationClick} aria-busy={navigationPending || undefined}>
+      {navigationPending ? <span className="archive-nav-progress" aria-label="Opening shelf" role="status" /> : null}
       <div className="site-shell archive-header-main">
         <Link href="/" className="archive-brand" aria-label="FilmBase home">
           <span className="archive-brand-stamp">FB</span>

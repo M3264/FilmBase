@@ -349,6 +349,9 @@
 
 /* FilmBase shelf-rail navigation */
 .archive-header { position: fixed; inset: 0 0 auto; z-index: 50; border-bottom: 1px solid var(--foreground); background: color-mix(in srgb,var(--background) 96%,transparent); }
+.archive-nav-progress { position: fixed; z-index: 100; inset: 0 auto auto 0; width: 38%; height: 3px; background: var(--primary); animation: archive-nav-progress 1.15s cubic-bezier(.22,.61,.36,1) infinite; transform-origin: left center; }
+.archive-header[data-navigation-pending] .archive-rail a:not(.active) { color: color-mix(in srgb,var(--foreground) 58%,var(--muted-foreground)); }
+@keyframes archive-nav-progress { 0% { transform: scaleX(.15); opacity: .5; } 55% { transform: scaleX(1.9); opacity: 1; } 100% { transform: scaleX(2.6); opacity: .35; } }
 .archive-header-main { min-height: 4.5rem; display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: stretch; gap: 1rem; }
 .archive-brand { display: flex; align-items: center; gap: .75rem; padding-right: 1rem; }
 .archive-brand-stamp { display: grid; place-items: center; width: 2.15rem; height: 2.15rem; border: 2px solid var(--foreground); background: var(--primary); color: var(--primary-foreground); box-shadow: 3px 3px 0 var(--foreground); font: 800 .68rem/1 var(--font-geist-mono),monospace; transform: rotate(-2deg); }
