@@ -24,6 +24,10 @@ export interface CatalogTitle {
   runtime: number | null
   tmdbId: number | null
   tmdbType: "movie" | "tv" | null
+  tagline: string | null
+  cast: string[]
+  director: string | null
+  releaseDate: string | null
   status: "ongoing" | "complete" | null
   latestEpisode: string | null
   date: string | null
@@ -161,6 +165,10 @@ export function mergeCatalogTitles(items: CatalogTitle[]): CatalogTitle[] {
       runtime: current.runtime ?? item.runtime,
       tmdbId: current.tmdbId ?? item.tmdbId,
       tmdbType: current.tmdbType ?? item.tmdbType,
+      tagline: current.tagline ?? item.tagline,
+      cast: current.cast.length ? current.cast : item.cast,
+      director: current.director ?? item.director,
+      releaseDate: current.releaseDate ?? item.releaseDate,
       status: current.status ?? item.status,
       latestEpisode: current.latestEpisode ?? item.latestEpisode,
       date: current.date ?? item.date,

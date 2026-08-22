@@ -69,7 +69,9 @@ export default async function MoviePage({ params }: { params: Promise<{ path: st
             <p className="eyebrow text-primary">FilmBase circulation dossier</p>
             <h1 className="mt-4 max-w-[18ch] break-words text-[clamp(2.4rem,7vw,5.8rem)] font-black leading-[.88] tracking-[-.06em]">{name}</h1>
             {metadata.length ? <dl className="mt-7 grid grid-cols-2 border-l border-t border-border sm:grid-cols-3">{metadata.map(([label, value]) => <div key={label} className="border-b border-r border-border p-3"><dt className="eyebrow text-muted-foreground">{label}</dt><dd className="mt-2 text-sm font-bold capitalize">{value}</dd></div>)}</dl> : null}
+            {title.tagline ? <p className="mt-6 max-w-2xl text-lg font-semibold leading-7 text-primary">“{title.tagline}”</p> : null}
             <section className="mt-8 grid gap-3 border-y border-border py-6 sm:grid-cols-[7rem_1fr]"><h2 className="eyebrow pt-1 text-primary">Case notes</h2><p className="max-w-3xl leading-7 text-muted-foreground">{title.synopsis || "No synopsis has been filed for this title yet."}</p></section>
+            {(title.cast.length || title.director || title.releaseDate) ? <section className="mt-6 grid gap-4 border-b border-border pb-6 sm:grid-cols-[7rem_1fr]"><h2 className="eyebrow pt-1 text-primary">Credits</h2><div className="space-y-2 text-sm text-muted-foreground">{title.director ? <p><strong className="text-foreground">Director</strong> / {title.director}</p> : null}{title.cast.length ? <p><strong className="text-foreground">Featuring</strong> / {title.cast.join(", ")}</p> : null}{title.releaseDate ? <p><strong className="text-foreground">Release</strong> / {title.releaseDate}</p> : null}</div></section> : null}
           </div>
         </article>
 
@@ -93,7 +95,7 @@ export default async function MoviePage({ params }: { params: Promise<{ path: st
 }
 
 async function RelatedTitles({ title, hasAdFreeStream }: { title: Awaited<ReturnType<typeof getCatalogDetail>>["title"]; hasAdFreeStream: boolean }) {
-  const related = await getRelatedCatalogTitles(title, 8)
+  const related = await getRelatedCatalogTitles(title, 8).catch(() => [])
   if (!related.length) return null
   return <section className="mt-16 border-t border-border pt-7" aria-labelledby="related-heading"><div className="mb-7 flex items-end justify-between gap-4"><div><p className="eyebrow text-primary">{hasAdFreeStream ? "The Spider-Man shelf" : "From nearby shelves"}</p><h2 id="related-heading" className="mt-2 text-3xl font-black tracking-[-.045em] sm:text-4xl">{hasAdFreeStream ? "More Spider-Man" : "Related titles"}</h2></div><Link href="/discover" className="border-b-2 border-foreground pb-1 text-xs font-bold uppercase tracking-[.08em]">Browse all ↗</Link></div><div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">{related.map((item, index) => <MovieCard key={item.id} movie={catalogToMovieItem(item)} index={index} />)}</div></section>
 }

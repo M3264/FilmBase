@@ -246,10 +246,15 @@ function offerMatchesTitle(offer: SourceOffer, title: string): boolean {
 }
 
 export async function getCatalogDetail(idOrPath: string): Promise<{ title: CatalogTitle; offers: SourceOffer[] }> {
+  if (idOrPath === LOCAL_MEDIA_PATH || idOrPath === localSpiderTitle.id || idOrPath === `fb-${LOCAL_MEDIA_PATH}`) {
+    await enrichWithTmdb([localSpiderTitle], 1)
+    return { title: localSpiderTitle, offers: localOffers() }
+  }
   const ref = parseReference(idOrPath)
   if (ref.provider === "ninejarocks") {
     const detail = await ninejaDetail(ref.id)
     const title = normalizeNinejaDetail(ref.id, detail)
+    await enrichWithTmdb([title], 1)
     const offers = ninejaOffers(ref.id, detail)
     if (offers.length && offers.every((offer) => offerMatchesTitle(offer, detail.title))) return { title, offers }
     const fallback = await legacyOffersForTitle(detail.title)
@@ -257,12 +262,16 @@ export async function getCatalogDetail(idOrPath: string): Promise<{ title: Catal
   }
   if (ref.provider === "legacy") {
     const detail = await getMovieDetailsLegacy(ref.id)
-    return { title: await enrichLegacyDetail(normalizeLegacyDetail(detail), detail), offers: legacyOffers(detail) }
+    const title = await enrichLegacyDetail(normalizeLegacyDetail(detail), detail)
+    await enrichWithTmdb([title], 1)
+    return { title, offers: legacyOffers(detail) }
   }
   const ninejaId = idOrPath.match(/(?:^|-)id(\d+)(?:\.html)?$/)?.[1] || (/^\d+$/.test(idOrPath) ? idOrPath : null)
   if (ninejaId) {
     const detail = await ninejaDetail(ninejaId)
-    return { title: normalizeNinejaDetail(ninejaId, detail), offers: ninejaOffers(ninejaId, detail) }
+    const title = normalizeNinejaDetail(ninejaId, detail)
+    await enrichWithTmdb([title], 1)
+    return { title, offers: ninejaOffers(ninejaId, detail) }
   }
   const [title, offers] = await Promise.all([getCatalogTitle(idOrPath), getTitleOffers(idOrPath)])
   return { title, offers }
