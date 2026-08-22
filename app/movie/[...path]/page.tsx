@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { Suspense } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { ExternalLink } from "lucide-react"
+import { Download, ExternalLink, Play } from "lucide-react"
 import { getCatalogDetail, getNavLinks, getRelatedCatalogTitles, catalogToMovieItem } from "@/lib/api"
 import { displayTitle } from "@/lib/presentation"
 import { Header } from "@/components/header"
@@ -48,7 +48,13 @@ export default async function MoviePage({ params }: { params: Promise<{ path: st
     ...(title.languages.length ? { inLanguage: title.languages } : {}),
     ...(title.countries.length ? { countryOfOrigin: title.countries.map((country) => ({ "@type": "Country", name: country })) } : {}),
   }
-  const metadata = [title.type && ["Format", title.type], title.year && ["Year", title.year], title.status && ["Status", title.status], title.rating && ["Rating", title.rating], title.languages[0] && ["Language", title.languages.join(", ")]].filter(Boolean) as Array<[string, string | number]>
+  const metadata = [
+    title.year && ["Year", title.year],
+    title.rating && ["IMDb", `${title.rating.toFixed(1)} / 10`],
+    title.runtime && ["Runtime", formatRuntime(title.runtime)],
+    title.languages[0] && ["Language", title.languages.join(", ")],
+    title.releaseDate && ["Released", formatReleaseDate(title.releaseDate)],
+  ].filter(Boolean) as Array<[string, string | number]>
 
   return (
     <div className="min-h-screen">
@@ -67,11 +73,16 @@ export default async function MoviePage({ params }: { params: Promise<{ path: st
           </div>
           <div className="min-w-0 md:pt-3">
             <p className="eyebrow text-primary">FilmBase circulation dossier</p>
-            <h1 className="mt-4 max-w-[18ch] break-words text-[clamp(2.4rem,7vw,5.8rem)] font-black leading-[.88] tracking-[-.06em]">{name}</h1>
-            {metadata.length ? <dl className="mt-7 grid grid-cols-2 border-l border-t border-border sm:grid-cols-3">{metadata.map(([label, value]) => <div key={label} className="border-b border-r border-border p-3"><dt className="eyebrow text-muted-foreground">{label}</dt><dd className="mt-2 text-sm font-bold capitalize">{value}</dd></div>)}</dl> : null}
-            {title.tagline ? <p className="mt-6 max-w-2xl text-lg font-semibold leading-7 text-primary">“{title.tagline}”</p> : null}
-            <section className="mt-8 grid gap-3 border-y border-border py-6 sm:grid-cols-[7rem_1fr]"><h2 className="eyebrow pt-1 text-primary">Case notes</h2><p className="max-w-3xl leading-7 text-muted-foreground">{title.synopsis || "No synopsis has been filed for this title yet."}</p></section>
-            {(title.cast.length || title.director || title.releaseDate) ? <section className="mt-6 grid gap-4 border-b border-border pb-6 sm:grid-cols-[7rem_1fr]"><h2 className="eyebrow pt-1 text-primary">Credits</h2><div className="space-y-2 text-sm text-muted-foreground">{title.director ? <p><strong className="text-foreground">Director</strong> / {title.director}</p> : null}{title.cast.length ? <p><strong className="text-foreground">Featuring</strong> / {title.cast.join(", ")}</p> : null}{title.releaseDate ? <p><strong className="text-foreground">Release</strong> / {title.releaseDate}</p> : null}</div></section> : null}
+            <h1 className="mt-4 max-w-[19ch] break-words text-[clamp(2.35rem,6vw,4.9rem)] font-black leading-[.9] tracking-[-.055em]">{name}</h1>
+            <div className="mt-6 flex flex-wrap gap-2">
+              {hasAdFreeStream ? <a href="#watch-heading" className="inline-flex min-h-10 items-center gap-2 bg-primary px-4 text-xs font-black uppercase tracking-[.08em] text-primary-foreground hover:bg-foreground"><Play className="h-3.5 w-3.5 fill-current" /> Play</a> : null}
+              <a href="#offers-heading" className="inline-flex min-h-10 items-center gap-2 border border-foreground px-4 text-xs font-black uppercase tracking-[.08em] hover:bg-foreground hover:text-background"><Download className="h-3.5 w-3.5" /> Download</a>
+            </div>
+            {metadata.length ? <dl className="mt-5 flex flex-wrap border-l border-t border-border">{metadata.map(([label, value]) => <div key={label} className="min-w-[6.5rem] flex-1 border-b border-r border-border px-3 py-2.5"><dt className="data-type text-[8px] font-bold uppercase tracking-[.12em] text-muted-foreground">{label}</dt><dd className="mt-1 text-xs font-bold capitalize sm:text-sm">{value}</dd></div>)}</dl> : null}
+            {title.genres.length ? <p className="mt-3 text-xs font-semibold text-muted-foreground">{title.genres.join(" · ")}</p> : null}
+            {title.tagline ? <p className="mt-5 max-w-2xl text-base font-semibold leading-6 text-primary">“{title.tagline}”</p> : null}
+            <section className="mt-5 border-y border-border py-4"><h2 className="sr-only">Overview</h2><p className="max-w-3xl text-sm leading-6 text-muted-foreground sm:text-[15px]">{title.synopsis || "No synopsis has been filed for this title yet."}</p></section>
+            {(title.cast.length || title.director) ? <section className="mt-4 border-b border-border pb-4"><div className="flex flex-wrap items-baseline gap-x-5 gap-y-2 text-sm">{title.director ? <p><span className="data-type mr-2 text-[8px] font-bold uppercase tracking-[.12em] text-primary">Director</span><strong>{title.director}</strong></p> : null}{title.cast.length ? <p className="min-w-0 text-muted-foreground"><span className="data-type mr-2 text-[8px] font-bold uppercase tracking-[.12em] text-primary">Cast</span>{title.cast.slice(0, 4).join(" · ")}</p> : null}</div>{title.cast.length > 4 ? <details className="mt-3 text-xs text-muted-foreground"><summary className="w-fit cursor-pointer font-bold text-foreground underline decoration-border underline-offset-4">Full cast · {title.cast.length}</summary><p className="mt-3 max-w-2xl leading-6">{title.cast.join(" · ")}</p></details> : null}</section> : null}
           </div>
         </article>
 
@@ -121,4 +132,16 @@ function groupOffers(offers: Awaited<ReturnType<typeof getCatalogDetail>>["offer
 function numberFromLabel(value: string, expression: RegExp): number | null {
   const match = value.match(expression)?.[1]
   return match ? Number(match) : null
+}
+
+function formatRuntime(minutes: number): string {
+  const hours = Math.floor(minutes / 60)
+  const remainder = minutes % 60
+  return hours ? `${hours}h${remainder ? ` ${remainder}m` : ""}` : `${minutes}m`
+}
+
+function formatReleaseDate(value: string): string {
+  const parsed = new Date(`${value.slice(0, 10)}T00:00:00Z`)
+  if (Number.isNaN(parsed.getTime())) return value
+  return new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" }).format(parsed)
 }

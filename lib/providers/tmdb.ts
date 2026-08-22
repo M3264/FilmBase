@@ -18,17 +18,21 @@ function query(path: string): string {
 
 export async function enrichWithTmdb(items: CatalogTitle[], limit = 12): Promise<CatalogTitle[]> {
   if (!TOKEN && !API_KEY) return items
-  const candidates = items.filter((item) => item.type !== "anime" && !item.tmdbId).slice(0, limit)
+  const candidates = items.filter((item) => item.type !== "anime").slice(0, limit)
   await Promise.all(candidates.map(async (item) => {
     try {
-      const kind = item.type === "series" ? "tv" : "movie"
-      const search = await fetchJson<TmdbSearchResult>(query(`/search/${kind}?query=${encodeURIComponent(item.title)}&page=1&include_adult=false&language=en-US`), { headers: headers(), next: { revalidate: 86400 }, provider: "tmdb", timeoutMs: 3500 })
-      const match = (search.results || []).find((result) => {
-        const date = result.release_date || result.first_air_date || ""
-        return !item.year || !date || date.startsWith(String(item.year))
-      }) || search.results?.[0]
-      if (!match) return
-      const detail = await fetchJson<TmdbDetails>(query(`/${kind}/${match.id}?language=en-US&append_to_response=credits`), { headers: headers(), next: { revalidate: 86400 }, provider: "tmdb", timeoutMs: 3500 })
+      const kind = item.tmdbType || (item.type === "series" ? "tv" : "movie")
+      let tmdbId = item.tmdbId
+      if (!tmdbId) {
+        const search = await fetchJson<TmdbSearchResult>(query(`/search/${kind}?query=${encodeURIComponent(item.title)}&page=1&include_adult=false&language=en-US`), { headers: headers(), next: { revalidate: 86400 }, provider: "tmdb", timeoutMs: 3500 })
+        const match = (search.results || []).find((result) => {
+          const date = result.release_date || result.first_air_date || ""
+          return !item.year || !date || date.startsWith(String(item.year))
+        }) || search.results?.[0]
+        if (!match) return
+        tmdbId = match.id
+      }
+      const detail = await fetchJson<TmdbDetails>(query(`/${kind}/${tmdbId}?language=en-US&append_to_response=credits`), { headers: headers(), next: { revalidate: 86400 }, provider: "tmdb", timeoutMs: 3500 })
       item.tmdbId = detail.id
       item.tmdbType = kind
       item.runtime = detail.runtime || null
