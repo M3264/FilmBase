@@ -58,7 +58,17 @@ export interface NavLinks {
   menuPages: Array<{ name: string; path: string }>
 }
 
-export interface MovieItem extends LegacyMovie {}
+export interface MovieItem extends LegacyMovie {
+  year?: number | null
+  synopsis?: string | null
+  type?: string
+  rating?: number | null
+  status?: string | null
+  latestEpisode?: string | null
+  countries?: string[]
+  languages?: string[]
+  sourceCount?: number
+}
 export interface HomeSection { title: string; items: MovieItem[] }
 export interface MovieDetails extends LegacyDetails {}
 export interface SearchResult { listTitle: string; currentPage: number; totalPages: number; items: MovieItem[] }
@@ -387,7 +397,23 @@ async function getGenreMoviesLegacy(genre: string, page = 1): Promise<SearchResu
 
 export function catalogToMovieItem(item: CatalogTitle): MovieItem {
   const primary = item.providers[0]
-  return { title: displayTitle(item.title), path: primary.provider === "ninejarocks" ? `fb-${primary.id}` : primary.provider === "local" ? primary.id : primary.path, imageUrl: item.imageUrl || "", categories: item.genres, date: item.date, summary: item.synopsis || undefined }
+  return {
+    title: displayTitle(item.title),
+    path: primary.provider === "ninejarocks" ? `fb-${primary.id}` : primary.provider === "local" ? primary.id : primary.path,
+    imageUrl: item.imageUrl || "",
+    categories: item.genres,
+    date: item.date,
+    summary: item.synopsis || undefined,
+    year: item.year,
+    synopsis: item.synopsis,
+    type: item.type,
+    rating: item.rating,
+    status: item.status,
+    latestEpisode: item.latestEpisode,
+    countries: item.countries,
+    languages: item.languages,
+    sourceCount: item.providers.length,
+  }
 }
 
 function parseReference(value: string): ProviderReference {

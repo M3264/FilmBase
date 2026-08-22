@@ -248,6 +248,9 @@
 .catalog-sleeve-copy > div { display: flex; align-items: start; justify-content: space-between; gap: .5rem; margin-top: .55rem; padding-top: .5rem; border-top: 1px solid var(--border); color: var(--muted-foreground); font: 500 .56rem/1.35 var(--font-geist-mono),monospace; text-transform: uppercase; }
 .catalog-sleeve-copy span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .catalog-sleeve-copy time { flex: none; }
+.catalog-sleeve-meta { display: -webkit-box; margin-top: .55rem; overflow: hidden; color: var(--muted-foreground); font-size: .68rem; line-height: 1.45; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.catalog-sleeve-action { display: inline-flex; align-items: center; gap: .35rem; margin-top: .75rem; padding: .42rem .5rem; background: var(--foreground); color: var(--background); font: 800 .55rem/1 var(--font-geist-mono),monospace; text-transform: uppercase; letter-spacing: .04em; }
+.catalog-sleeve-action b { color: var(--primary); font-size: .75rem; }
 
 .club-schedule-wrap { padding: clamp(1.2rem,4vw,3rem); margin-inline: calc(clamp(1.25rem,4vw,4rem) * -.5); background: #0a1b29; color: #fff8e9; transform: rotate(-.35deg); box-shadow: 0 0 0 1px #263d4d,12px 12px 0 #ffb22f; }
 .club-schedule-wrap .club-heading { transform: rotate(.35deg); }
