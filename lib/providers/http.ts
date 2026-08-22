@@ -46,6 +46,7 @@ function assertAllowedUpstream(value: string, provider: Provider | null): void {
   const allowed = [
     process.env.FILMBASE_LEGACY_API_URL || "https://api.filmbase.fun",
     process.env.FILMBASE_API2_URL || "https://api2.filmbase.fun",
+    "https://api.themoviedb.org",
   ].map((origin) => new URL(origin).origin)
 
   if (!allowed.includes(url.origin) || !/^https?:$/.test(url.protocol) || url.username || url.password) {

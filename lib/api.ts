@@ -35,6 +35,7 @@ import {
 } from "@/lib/providers/ninejarocks"
 import { displayTitle } from "@/lib/presentation"
 import { LOCAL_MEDIA_PATH, localOffers, localSpiderTitle } from "@/lib/providers/local-media"
+import { enrichWithTmdb } from "@/lib/providers/tmdb"
 
 export type {
   CatalogPage,
@@ -63,6 +64,7 @@ export interface MovieItem extends LegacyMovie {
   synopsis?: string | null
   type?: string
   rating?: number | null
+  runtime?: number | null
   status?: string | null
   latestEpisode?: string | null
   countries?: string[]
@@ -91,7 +93,7 @@ export async function getDiscoveryIndex(): Promise<DiscoveryIndex> {
 
 export async function getDiscoveryCollection(collection: DiscoveryCollectionId): Promise<CatalogPage> {
   const upstream = collection === "staff-picks" ? "staff-pick" : collection
-  const items = await enrichNinejaArtwork(mergeCatalogTitles((await ninejaDiscoveryFeed(upstream)).map(normalizeNinejaMovie)), 20)
+  const items = await enrichWithTmdb(await enrichNinejaArtwork(mergeCatalogTitles((await ninejaDiscoveryFeed(upstream)).map(normalizeNinejaMovie)), 20), 12)
   return { items, page: 1, pageSize: items.length, total: items.length, hasNext: false }
 }
 
@@ -101,7 +103,7 @@ export async function getDiscoveryCategory(category: string, page = 1): Promise<
     throw new CatalogApiError("Discovery category was not found", "NOT_FOUND", 404)
   }
   const feed = await ninejaCategoryPage(category, page)
-  const items = await enrichNinejaArtwork(mergeCatalogTitles((feed.movies || []).map(normalizeNinejaMovie)), 20)
+  const items = await enrichWithTmdb(await enrichNinejaArtwork(mergeCatalogTitles((feed.movies || []).map(normalizeNinejaMovie)), 20), 12)
   return {
     items,
     page: feed.page || page,
@@ -114,7 +116,7 @@ export async function getDiscoveryCategory(category: string, page = 1): Promise<
 export async function getAlphabeticalTitles(letter: string): Promise<CatalogPage> {
   const normalized = letter.trim().toUpperCase()
   if (!/^[A-Z]$/.test(normalized)) throw new CatalogApiError("Letter must be A to Z", "INVALID_ARGUMENT", 400)
-  const items = await enrichNinejaArtwork(mergeCatalogTitles((await ninejaAlphabetical(normalized)).map(normalizeNinejaMovie)), 20)
+  const items = await enrichWithTmdb(await enrichNinejaArtwork(mergeCatalogTitles((await ninejaAlphabetical(normalized)).map(normalizeNinejaMovie)), 20), 12)
   return { items, page: 1, pageSize: items.length, total: items.length, hasNext: false }
 }
 
@@ -145,7 +147,7 @@ export async function getUnifiedHomeData(): Promise<UnifiedHomeData> {
   // occasionally be slow while populating its SQLite cache; that old fan-out
   // multiplied one page view into 20+ requests and eventually exhausted the
   // web process. Cards without feed artwork use the normal missing-image state.
-  const allItems = sections.flatMap((section) => section.items)
+  const allItems = await enrichWithTmdb(sections.flatMap((section) => section.items), 16)
   return {
     sections,
     featured: mergeCatalogTitles(allItems.filter((item) => item.imageUrl)).slice(0, 5).length
@@ -165,7 +167,7 @@ export async function searchCatalog(query: string, page = 1, pageSize = 24): Pro
     throw firstRejection(legacyResult, ninejaResult)
   }
   const localItems = localSpiderTitle.title.toLowerCase().includes(cleanQuery.toLowerCase()) ? [localSpiderTitle] : []
-  const ranked = mergeCatalogTitles([...localItems, ...legacyItems, ...ninejaItems]).sort((a, b) => searchRank(cleanQuery, a.title) - searchRank(cleanQuery, b.title))
+  const ranked = mergeCatalogTitles(await enrichWithTmdb([...localItems, ...legacyItems, ...ninejaItems], 12)).sort((a, b) => searchRank(cleanQuery, a.title) - searchRank(cleanQuery, b.title))
   const start = Math.max(0, page - 1) * pageSize
   return { items: ranked.slice(start, start + pageSize), page, pageSize, total: ranked.length, hasNext: start + pageSize < ranked.length }
 }
@@ -408,6 +410,7 @@ export function catalogToMovieItem(item: CatalogTitle): MovieItem {
     synopsis: item.synopsis,
     type: item.type,
     rating: item.rating,
+    runtime: item.runtime,
     status: item.status,
     latestEpisode: item.latestEpisode,
     countries: item.countries,

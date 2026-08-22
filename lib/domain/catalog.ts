@@ -1,4 +1,4 @@
-export type Provider = "legacy" | "ninejarocks" | "animepahe" | "local"
+export type Provider = "legacy" | "ninejarocks" | "animepahe" | "local" | "tmdb"
 
 export type ContentType = "movie" | "series" | "anime"
 
@@ -21,6 +21,9 @@ export interface CatalogTitle {
   countries: string[]
   languages: string[]
   rating: number | null
+  runtime: number | null
+  tmdbId: number | null
+  tmdbType: "movie" | "tv" | null
   status: "ongoing" | "complete" | null
   latestEpisode: string | null
   date: string | null
@@ -155,6 +158,9 @@ export function mergeCatalogTitles(items: CatalogTitle[]): CatalogTitle[] {
       countries: unique([...current.countries, ...item.countries]),
       languages: unique([...current.languages, ...item.languages]),
       rating: current.rating ?? item.rating,
+      runtime: current.runtime ?? item.runtime,
+      tmdbId: current.tmdbId ?? item.tmdbId,
+      tmdbType: current.tmdbType ?? item.tmdbType,
       status: current.status ?? item.status,
       latestEpisode: current.latestEpisode ?? item.latestEpisode,
       date: current.date ?? item.date,

@@ -17,7 +17,7 @@ export function MovieCard({ movie, compact = false, index }: { movie: MovieItem;
   const catalogueNumber = String((index ?? 0) + 1).padStart(2, "0")
   const primaryLabel = movie.categories?.[0] || "FilmBase selection"
   const format = movie.type === "series" ? "Series" : movie.type === "anime" ? "Anime" : "Film"
-  const detailLine = [format, movie.year || movie.date, movie.rating ? `${movie.rating.toFixed(1)} / 10` : null].filter(Boolean).join(" · ")
+  const detailLine = [format, movie.year || movie.date, movie.rating ? `${movie.rating.toFixed(1)} / 10` : null, movie.runtime ? `${movie.runtime} min` : null].filter(Boolean).join(" · ")
   const synopsis = movie.synopsis || movie.summary
   if (compact) return (
     <Link href={href} className="group grid min-h-16 grid-cols-[2.5rem_minmax(0,1fr)_auto] items-center gap-3 border-b border-border px-1 py-3 outline-none transition-colors hover:bg-secondary/60 focus-visible:bg-secondary focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:grid-cols-[3.5rem_minmax(0,1fr)_auto] sm:px-3">
