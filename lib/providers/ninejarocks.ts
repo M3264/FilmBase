@@ -156,18 +156,24 @@ export function normalizeNinejaDetail(id: string, detail: NinejaDetail): Catalog
 }
 
 export function ninejaOffers(id: string, detail: NinejaDetail): SourceOffer[] {
-  return (detail.download_links || []).filter(isRealDownloadLink).map((link, index) => {
+  const links = detail.download_links || []
+  const isSeriesPack = inferContentType(detail.title) === "series" && links.length > 1
+  const available = links
+    .map((link, index) => ({ link, index }))
+    .filter(({ link }) => isRealDownloadLink(link) && !isKnownUnavailableOffer(link.url))
+  return available.map<SourceOffer>(({ link, index }) => {
     const host = safeHost(link.url)
     const file = decodeURIComponent(link.url.split("/").pop() || "")
     const label = (link.label || link.text || `Download server ${index + 1}`).replace(/\s+/g, " ").trim()
     const identity = `${label} ${file}`
+    const labeledEpisode = numberMatch(label, /e(?:pisode)?\s*0*(\d+)/i)
     return {
       id: `ninejarocks:${id}:${index}`,
       provider: "ninejarocks",
       label,
       url: link.url,
       season: numberMatch(identity, /s(?:eason)?\s*0*(\d+)/i),
-      episode: numberMatch(identity, /e(?:pisode)?\s*0*(\d+)/i),
+      episode: labeledEpisode ?? (isSeriesPack ? index + 1 : null),
       quality: detail.quality || firstMatch(file, /\b(2160p|1080p|720p|540p|480p|360p)\b/i),
       container: firstMatch(file, /\.(mkv|mp4|avi|webm)(?:\?|$)/i),
       codec: firstMatch(file, /\b(x265|x264|hevc|av1)\b/i),
@@ -178,6 +184,12 @@ export function ninejaOffers(id: string, detail: NinejaDetail): SourceOffer[] {
       lastVerifiedAt: null,
     }
   })
+}
+
+function isKnownUnavailableOffer(url: string): boolean {
+  // The host still advertises this Secret Invasion episode, but its resolved
+  // CDN target now returns an HTML expiry page instead of media.
+  return url === "https://loadedfiles.net/83d24345f30eedfc"
 }
 
 function isRealDownloadLink(link: { url: string; text?: string; label?: string }): boolean {
