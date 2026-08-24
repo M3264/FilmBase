@@ -160,7 +160,7 @@ export function ninejaOffers(id: string, detail: NinejaDetail): SourceOffer[] {
   const isSeriesPack = inferContentType(detail.title) === "series" && links.length > 1
   const available = links
     .map((link, index) => ({ link, index }))
-    .filter(({ link }) => isRealDownloadLink(link) && !isKnownUnavailableOffer(link.url))
+    .filter(({ link }) => isRealDownloadLink(link))
   return available.map<SourceOffer>(({ link, index }) => {
     const host = safeHost(link.url)
     const file = decodeURIComponent(link.url.split("/").pop() || "")
@@ -184,12 +184,6 @@ export function ninejaOffers(id: string, detail: NinejaDetail): SourceOffer[] {
       lastVerifiedAt: null,
     }
   })
-}
-
-function isKnownUnavailableOffer(url: string): boolean {
-  // The host still advertises this Secret Invasion episode, but its resolved
-  // CDN target now returns an HTML expiry page instead of media.
-  return url === "https://loadedfiles.net/83d24345f30eedfc"
 }
 
 function isRealDownloadLink(link: { url: string; text?: string; label?: string }): boolean {
