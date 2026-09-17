@@ -125,9 +125,6 @@ export async function getUnifiedHomeData(): Promise<UnifiedHomeData> {
   const sections: HomeFeedSection[] = []
   const providers: Provider[] = []
 
-  sections.push({ id: "local-premieres", title: "FilmBase premieres", items: [localSpiderTitle] })
-  providers.push("local")
-
   if (ninejaResult.status === "fulfilled") {
     providers.push("ninejarocks")
     ninejaResult.value.forEach((section, index) => {
