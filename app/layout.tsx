@@ -1,5 +1,6 @@
 import type React from "react"
 import type { Metadata } from "next"
+import Script from "next/script"
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import { ThemeProvider } from "@/components/theme-provider"
@@ -37,6 +38,10 @@ export default function RootLayout({
         <ThemeProvider>
           <PwaRegister />
           {children}
+          <Script
+            src="https://aw.kennyy.tech/api/script.js?siteId=349f6b798e8d"
+            strategy="afterInteractive"
+          />
         </ThemeProvider>
       </body>
     </html>
