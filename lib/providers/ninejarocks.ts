@@ -7,6 +7,7 @@ import {
   type SourceOffer,
 } from "@/lib/domain/catalog"
 import { fetchJson } from "@/lib/providers/http"
+import moviePathsById from "@/lib/movie-sitemap-paths.json"
 
 export const NINEJAROCKS_URL = process.env.FILMBASE_API2_URL || "https://api2.filmbase.fun"
 
@@ -101,7 +102,8 @@ export async function ninejaCategories(): Promise<Array<{ slug: string; label: s
 }
 
 export async function ninejaDetail(id: string): Promise<NinejaDetail> {
-  return fetchJson(`${NINEJAROCKS_URL}/api/movie/${encodeURIComponent(id)}`, {
+  const publishedPath = (moviePathsById as Record<string, string>)[id]
+  return fetchJson(`${NINEJAROCKS_URL}/api/movie/${publishedPath || encodeURIComponent(id)}`, {
     next: { revalidate: 300 },
     provider: "ninejarocks",
   })

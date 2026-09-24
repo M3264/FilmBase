@@ -1,19 +1,23 @@
 import type { MetadataRoute } from "next"
 import { getUnifiedHomeData } from "@/lib/api"
 import { publicMoviePath } from "@/lib/presentation"
+import moviePathsById from "@/lib/movie-sitemap-paths.json"
 
 const base = "https://filmbase.fun"
+export const revalidate = 3600
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPaths = ["", "/discover", "/discover/latest", "/discover/trending", "/discover/staff-picks", "/discover/a-z", "/anime", "/search", "/help"]
-  const staticEntries: MetadataRoute.Sitemap = staticPaths.map((path) => ({ url: `${base}${path}`, changeFrequency: path === "" ? "daily" : "weekly", priority: path === "" ? 1 : 0.7 }))
+  const staticEntries: MetadataRoute.Sitemap = staticPaths.map((path) => ({ url: `${base}${path}` }))
+  // The publisher's published title paths also let API2 resolve older IDs.
+  const moviePaths = new Set(Object.keys(moviePathsById).map((id) => `fb-${id}`))
   try {
     const home = await getUnifiedHomeData()
-    const titles = [...new Map(home.sections.flatMap((section) => section.items).map((item) => [item.id, item])).values()]
-    return [...staticEntries, ...titles.map((title) => {
+    for (const title of [...home.featured, ...home.sections.flatMap((section) => section.items)]) {
       const provider = title.providers[0]
       const path = provider?.provider === "ninejarocks" ? `fb-${provider.id}` : provider?.path || title.slug
-      return { url: `${base}/movie/${publicMoviePath(path)}`, changeFrequency: "weekly" as const, priority: 0.8 }
-    })]
-  } catch { return staticEntries }
+      moviePaths.add(publicMoviePath(path))
+    }
+  } catch { /* The known catalogue remains available if a live provider is down. */ }
+  return [...staticEntries, ...[...moviePaths].map((path) => ({ url: `${base}/movie/${path}` }))]
 }
