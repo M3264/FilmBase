@@ -2,7 +2,7 @@
 
 set -eu
 
-BASE_URL="${FILMBASE_CHECK_URL:-https://filmbase.fun}"
+BASE_URL="${FILMBASE_CHECK_URL:-https://filmbase.top}"
 MAX_TIME="${FILMBASE_CHECK_MAX_TIME:-15}"
 
 check() {

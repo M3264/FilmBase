@@ -15,6 +15,7 @@ import { MovieCard } from "@/components/movie-card"
 import { StreamPlayer } from "@/components/stream-player"
 import { JsonLd } from "@/components/json-ld"
 import { SeoBreadcrumbs, breadcrumbSchema } from "@/components/seo-breadcrumbs"
+import { SITE_URL } from "@/lib/site-url"
 
 export async function generateMetadata({ params }: { params: Promise<{ path: string[] }> }): Promise<Metadata> {
   try {
@@ -34,7 +35,7 @@ export default async function MoviePage({ params }: { params: Promise<{ path: st
   const groupedOffers = groupOffers(offers)
   const repeatedSeriesSize = offers.length > 6
   const hasAdFreeStream = title.id === "local:spider-man-brand-new-day-2026"
-  const canonicalUrl = `https://filmbase.fun/movie/${moviePath}`
+  const canonicalUrl = `${SITE_URL}/movie/${moviePath}`
   const breadcrumbs = [{ name: "Home", href: "/" }, { name: "Discover", href: "/discover" }, { name }]
   const schema = {
     "@context": "https://schema.org",

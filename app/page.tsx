@@ -10,11 +10,12 @@ import { TransmissionStrip } from "@/components/transmission-strip"
 import { Footer } from "@/components/footer"
 import { publicAnimeImageUrl } from "@/lib/presentation-images"
 import { JsonLd } from "@/components/json-ld"
+import { SITE_URL } from "@/lib/site-url"
 
 export default async function HomePage() {
   const navLinks = await getNavLinks().catch(() => ({ genres: [], categories: [], menuPages: [] }))
   const transmissionLinks = navLinks.genres.length > 0 ? navLinks.genres : navLinks.categories.map(({ name, path }) => ({ name, path }))
-  return <div className="min-h-screen"><Header navLinks={navLinks} /><main><JsonLd data={{ "@context": "https://schema.org", "@type": "WebSite", name: "FilmBase", url: "https://filmbase.fun", potentialAction: { "@type": "SearchAction", target: "https://filmbase.fun/search?q={search_term_string}", "query-input": "required name=search_term_string" } }} /><Suspense fallback={<HomeFeatureLoading />}><HomeCatalogue /></Suspense><TransmissionStrip genres={transmissionLinks} /><Suspense fallback={<HomeShelfLoading />}><HomeAnime /></Suspense><HomeDirectory /></main><Footer /></div>
+  return <div className="min-h-screen"><Header navLinks={navLinks} /><main><JsonLd data={{ "@context": "https://schema.org", "@type": "WebSite", name: "FilmBase", url: SITE_URL, potentialAction: { "@type": "SearchAction", target: `${SITE_URL}/search?q={search_term_string}`, "query-input": "required name=search_term_string" } }} /><Suspense fallback={<HomeFeatureLoading />}><HomeCatalogue /></Suspense><TransmissionStrip genres={transmissionLinks} /><Suspense fallback={<HomeShelfLoading />}><HomeAnime /></Suspense><HomeDirectory /></main><Footer /></div>
 }
 
 async function HomeCatalogue() {

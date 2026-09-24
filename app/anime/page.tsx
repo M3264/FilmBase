@@ -1,7 +1,10 @@
+import type { Metadata } from "next"
 import { getNavLinks } from "@/lib/api"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { AnimeGrid } from "@/components/anime-grid"
+
+export const metadata: Metadata = { title: "Anime", alternates: { canonical: "/anime" } }
 
 export default async function AnimePage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
   const navLinks = await getNavLinks().catch(() => ({ genres: [], categories: [], menuPages: [] }))

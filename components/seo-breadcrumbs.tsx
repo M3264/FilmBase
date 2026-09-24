@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { SITE_URL } from "@/lib/site-url"
 
 export type BreadcrumbEntry = { name: string; href?: string }
 
@@ -25,7 +26,7 @@ export function breadcrumbSchema(items: BreadcrumbEntry[]) {
       "@type": "ListItem",
       position: index + 1,
       name: item.name,
-      ...(item.href ? { item: new URL(item.href, "https://filmbase.fun").toString() } : {}),
+      ...(item.href ? { item: new URL(item.href, SITE_URL).toString() } : {}),
     })),
   }
 }

@@ -6,10 +6,11 @@ import { GeistMono } from "geist/font/mono"
 import { ThemeProvider } from "@/components/theme-provider"
 import { PwaRegister } from "@/components/pwa-register"
 import { WhatsAppNotice } from "@/components/whatsapp-notice"
+import { SITE_URL } from "@/lib/site-url"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://filmbase.fun"),
+  metadataBase: new URL(SITE_URL),
   title: { default: "FilmBase — Films, series and anime", template: "%s — FilmBase" },
   description: "A clear, curated archive of movies, series and anime.",
   alternates: { canonical: "/" },

@@ -7,8 +7,8 @@ import { ArrowDownToLine, ArrowLeft, ExternalLink } from "lucide-react"
 import { SeoBreadcrumbs } from "@/components/seo-breadcrumbs"
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string; ep: string }> }): Promise<Metadata> {
-  const { ep } = await params
-  return { title: `Anime episode ${ep}`, description: `Download anime episode ${ep} from explicit source offers on FilmBase.` }
+  const { id, ep } = await params
+  return { title: `Anime episode ${ep}`, description: `Download anime episode ${ep} from explicit source offers on FilmBase.`, alternates: { canonical: `/anime/${encodeURIComponent(id)}/episode/${encodeURIComponent(ep)}` } }
 }
 
 export default async function AnimeEpisodePage({ params }: { params: Promise<{ id: string; ep: string }> }) {

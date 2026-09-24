@@ -8,11 +8,13 @@ import { ArrowLeft, Play } from "lucide-react"
 import { publicAnimeImageUrl } from "@/lib/presentation-images"
 import { JsonLd } from "@/components/json-ld"
 import { SeoBreadcrumbs, breadcrumbSchema } from "@/components/seo-breadcrumbs"
+import { SITE_URL } from "@/lib/site-url"
 
 const proxyImage = publicAnimeImageUrl
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
+  const canonical = `/anime/${encodeURIComponent(id)}`
   try {
     const response = await getAnimeInfo(id) as any
     const anime = response?.data ?? response
@@ -20,10 +22,11 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     return {
       title: anime?.title ?? "Anime",
       description: anime?.synopsis?.slice(0, 160) ?? `Explore ${anime?.title} on FilmBase`,
+      alternates: { canonical },
       openGraph: { title: anime?.title ?? "Anime", description: anime?.synopsis?.slice(0, 160) ?? "", images: image ? [{ url: image }] : [], type: "video.tv_show" },
       twitter: { card: "summary_large_image", title: anime?.title ?? "Anime", description: anime?.synopsis?.slice(0, 160) ?? "", images: image ? [image] : [] },
     }
-  } catch { return { title: "Anime" } }
+  } catch { return { title: "Anime", alternates: { canonical } } }
 }
 
 export default async function AnimeDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -60,7 +63,7 @@ export default async function AnimeDetailPage({ params }: { params: Promise<{ id
     <div className="min-h-screen">
       <Header navLinks={navLinks} />
       <main className="site-shell pt-24 pb-14 sm:pt-28">
-        <JsonLd data={[breadcrumbSchema(breadcrumbs), { "@context": "https://schema.org", "@type": "TVSeries", name, url: `https://filmbase.fun/anime/${encodeURIComponent(id)}`, ...(anime.synopsis ? { description: anime.synopsis } : {}), ...(coverImg ? { image: coverImg } : {}) }]} />
+        <JsonLd data={[breadcrumbSchema(breadcrumbs), { "@context": "https://schema.org", "@type": "TVSeries", name, url: `${SITE_URL}/anime/${encodeURIComponent(id)}`, ...(anime.synopsis ? { description: anime.synopsis } : {}), ...(coverImg ? { image: coverImg } : {}) }]} />
         <SeoBreadcrumbs items={breadcrumbs} />
         <Link href="/anime" className="mb-7 inline-flex items-center gap-2 py-2 text-sm text-muted-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><ArrowLeft className="h-4 w-4" /> Back to the broadcast board</Link>
 

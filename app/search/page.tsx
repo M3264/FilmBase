@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { searchMovies, getNavLinks, searchAnime } from "@/lib/api"
 import { Header } from "@/components/header"
 import { MovieCard } from "@/components/movie-card"
@@ -5,6 +6,8 @@ import { Footer } from "@/components/footer"
 import Link from "next/link"
 import { SearchForm } from "@/components/search-form"
 import { publicAnimeImageUrl } from "@/lib/presentation-images"
+
+export const metadata: Metadata = { title: "Search", alternates: { canonical: "/search" } }
 
 const proxyImage = publicAnimeImageUrl
 

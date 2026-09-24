@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next"
+import { SITE_URL } from "@/lib/site-url"
 
 export default function robots(): MetadataRoute.Robots {
-  return { rules: { userAgent: "*", allow: "/", disallow: ["/api/", "/media/", "/stream-media/"] }, sitemap: "https://filmbase.fun/sitemap.xml", host: "https://filmbase.fun" }
+  return { rules: { userAgent: "*", allow: "/", disallow: ["/api/", "/media/", "/stream-media/"] }, sitemap: `${SITE_URL}/sitemap.xml`, host: SITE_URL }
 }

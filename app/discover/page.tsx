@@ -1,7 +1,10 @@
+import type { Metadata } from "next"
 import Link from "next/link"
 import { getDiscoveryIndex, getNavLinks } from "@/lib/api"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
+
+export const metadata: Metadata = { title: "Discover", alternates: { canonical: "/discover" } }
 
 export default async function DiscoverPage() {
   const [navLinks, fetchedIndex] = await Promise.all([
