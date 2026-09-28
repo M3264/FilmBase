@@ -1,13 +1,13 @@
 import assert from 'node:assert/strict'
 import { createServer } from 'node:http'
 import { spawn } from 'node:child_process'
-import { mkdtemp, readFile, rm } from 'node:fs/promises'
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 const today = new Date().toISOString().slice(0, 10)
 const previous = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
-const title = (id, name) => ({ id: `ninejarocks:${id}`, title: name, type: 'movie', imageUrl: null, providers: [{ provider: 'ninejarocks', id: String(id) }] })
+const title = (id, name, synopsis = null) => ({ id: `ninejarocks:${id}`, title: name, type: 'movie', year: 2026, synopsis, imageUrl: null, providers: [{ provider: 'ninejarocks', id: String(id) }] })
 let feed = [title(1, 'First Film (2026)')]
 let failFeed = false
 const upstream = createServer((request, response) => {
@@ -17,17 +17,24 @@ const upstream = createServer((request, response) => {
     if (failFeed) { response.statusCode = 503; response.end('{}'); return }
     response.end(JSON.stringify({ data: feed })); return
   }
+  if (url.pathname === '/v1/search') {
+    const match = url.searchParams.get('q') === 'Theatrical Film'
+    response.end(JSON.stringify({ data: match ? [title(4, 'Theatrical Film (2026)', 'A matching FilmBase listing.')] : [] })); return
+  }
   if (url.pathname === '/discover/movie') {
     const theatrical = url.searchParams.get('with_release_type') === '2|3'
     response.end(JSON.stringify({ results: theatrical ? [
-      { id: 101, title: 'Theatrical Film', poster_path: '/theatrical.jpg' },
+      { id: 101, title: 'Theatrical Film', poster_path: '/theatrical.jpg', overview: 'A film arrives in cinemas.' },
       { id: 103, title: 'Older Theatrical Film', poster_path: null },
-    ] : [{ id: 102, title: 'Digital Film', poster_path: null }] })); return
+    ] : [{ id: 102, title: 'Digital Film', poster_path: null, overview: 'A film arrives online.' }] })); return
   }
   const match = url.pathname.match(/^\/movie\/(\d+)\/release_dates$/)
   if (match) {
     const id = Number(match[1])
     response.end(JSON.stringify({ results: [{ release_dates: [{ type: id === 102 ? 4 : 3, release_date: `${id === 103 ? previous : today}T00:00:00.000Z` }] }] })); return
+  }
+  if (url.pathname === '/movie/101' || url.pathname === '/movie/102' || url.pathname === '/movie/103') {
+    response.end(JSON.stringify({ release_date: `${today.slice(0, 4)}-01-01`, overview: 'A verified movie overview.' })); return
   }
   response.statusCode = 404; response.end('{}')
 })
@@ -68,19 +75,26 @@ try {
   assert.equal(first.body.tmdb, 0)
   const initial = (await get('/api/v1/alerts')).body
   assert.deepEqual(initial.events.map(event => event.kind), ['tmdb_theatrical', 'tmdb_digital'])
-  assert(initial.events.every(event => !event.availableOnFilmBase && event.url.startsWith('https://www.themoviedb.org/')))
+  assert.equal(initial.events[0].availableOnFilmBase, true)
+  assert.equal(initial.events[0].filmbaseUrl, 'https://filmbase.top/movie/fb-4')
+  assert.equal(initial.events[0].url, initial.events[0].filmbaseUrl)
+  assert.equal(initial.events[0].description, 'A film arrives in cinemas.')
+  assert.equal(initial.events[1].availableOnFilmBase, false)
+  assert(initial.events[1].url.startsWith('https://www.themoviedb.org/'))
   const pick = (await get('/api/v1/picks/daily')).body
   assert.equal(pick.date, today)
   assert.match(pick.pick.url, /^https:\/\/filmbase\.top\/movie\/fb-1$/)
   assert.equal((await get('/api/v1/picks/random')).body.contentType, 'movie')
   assert.equal((await sync()).body.cursor, first.body.cursor)
-  feed = [title(3, 'Third Film (2026)'), title(2, 'Example Series Season 1'), ...feed]
+  feed = [title(3, 'Third Film (2026)', 'A new movie story.'), title(2, 'Example Series Season 1 (Episode 4 Added)', 'A continuing series story.'), ...feed]
   const second = await sync()
   assert.equal(second.body.filmbase, 2)
   const newer = (await get(`/api/v1/alerts?after=${first.body.cursor}&limit=1`)).body
   assert.equal(newer.events.length, 1)
   assert.equal(newer.hasMore, true)
   assert.equal(newer.events[0].contentType, 'series')
+  assert.equal(newer.events[0].description, 'A continuing series story.')
+  assert.equal(newer.events[0].episode, 'Episode 4')
   assert.equal((await get('/api/v1/picks/daily')).body.pick.url, pick.pick.url)
   const stream = await fetch(`${base}/api/v1/alerts/stream`, { headers: { 'Last-Event-ID': first.body.cursor } })
   assert.equal(stream.status, 200)
@@ -98,6 +112,13 @@ try {
   assert.equal((await get('/api/v1/alerts')).body.events.length, 4)
   const persisted = JSON.parse(await readFile(join(dir, 'state.json'), 'utf8'))
   assert.equal(persisted.events.length, 4)
+  delete persisted.events[0].description
+  delete persisted.events[0].filmbaseUrl
+  await writeFile(join(dir, 'state.json'), JSON.stringify(persisted))
+  await sync()
+  const backfilled = (await get('/api/v1/alerts')).body.events[0]
+  assert.equal(backfilled.description, 'A verified movie overview.')
+  assert.equal(backfilled.filmbaseUrl, 'https://filmbase.top/movie/fb-4')
   await stop()
   await rm(join(dir, 'state.json'))
   start('runner'); await ready()

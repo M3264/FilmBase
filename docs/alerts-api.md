@@ -11,15 +11,17 @@ Base URL: `https://filmbase.top`. All dates use UTC. No authentication is needed
   "events": [{
     "id": "42", "kind": "filmbase_new", "title": "Example Movie (2026)",
     "contentType": "movie", "poster": "https://example.com/poster.jpg",
+    "description": "A short story synopsis.", "episode": null,
     "date": "2026-09-28", "source": "FilmBase",
     "url": "https://filmbase.top/movie/fb-411522",
+    "filmbaseUrl": "https://filmbase.top/movie/fb-411522", "tmdbUrl": null,
     "availableOnFilmBase": true, "publishedAt": "2026-09-28T12:00:00.000Z"
   }],
   "cursor": "42", "hasMore": false, "retainedSince": "39"
 }
 ```
 
-`filmbase_new` means a newly listed FilmBase movie, series, or anime. `tmdb_theatrical` and `tmdb_digital` mean the earliest reported worldwide theatrical or digital date for a movie, respectively. TMDB events have `source: "TMDB"`, `availableOnFilmBase: false`, and a `https://www.themoviedb.org/movie/...` URL. A TMDB event does not imply a FilmBase listing.
+`filmbase_new` means a newly listed FilmBase movie, series, or anime. Its `description` is the FilmBase synopsis, and `episode` identifies a newly named episode when present. A series synopsis may describe the whole show rather than that episode; missing provider descriptions are `null`. `tmdb_theatrical` and `tmdb_digital` mean the earliest reported worldwide theatrical or digital date for a movie, respectively. Their `description` is TMDB's overview. TMDB events always retain a `tmdbUrl`. When an exact movie title and year match is verified in the FilmBase catalogue, `filmbaseUrl` is set, `availableOnFilmBase` is true, and `url` points to FilmBase. Otherwise `filmbaseUrl` is null, `availableOnFilmBase` is false, and `url` points to TMDB. A TMDB event does not by itself imply a FilmBase listing.
 
 ## Server-Sent Events
 
