@@ -67,9 +67,9 @@ setInterval(() => poll().catch(console.error), 5 * 60 * 1000);
 
 ## Operations and credits
 
-The private `POST /api/v1/alerts/sync` endpoint requires `Authorization: Bearer <FILMBASE_ALERTS_SYNC_SECRET>`. A Coolify scheduled task calls it every five minutes. The first successful FilmBase sync establishes a baseline without publishing old listings. API2's normalized `latest` feed is a fixed window and cached upstream, so a prolonged outage beyond that window cannot be reconstructed. A failed check preserves the last good snapshot. TMDB scans one UTC day per successful scheduled run, catching up after downtime; each release type considers the 20 most popular discover results and verifies the earliest date with TMDB release details.
+The private `POST /api/v1/alerts/sync` endpoint requires `Authorization: Bearer <FILMBASE_ALERTS_SYNC_SECRET>`. The Docker runner calls it every five minutes. The first successful FilmBase sync establishes a baseline without publishing old listings. API2's normalized `latest` feed is a fixed window and cached upstream, so a prolonged outage beyond that window cannot be reconstructed. A failed check preserves the last good snapshot. TMDB scans one UTC day per successful scheduled run, catching up after downtime; each release type considers the 20 most popular discover results and verifies the earliest date with TMDB release details.
 
-On the `.top` Coolify app, use the scheduled task and persistent volume described below. The public proxy should pass `/api/v1/alerts/stream` without response buffering and with a read timeout longer than the keepalive interval.
+On the `.top` Coolify app, use the Docker runner and persistent volume described below. The public proxy should pass `/api/v1/alerts/stream` without response buffering and with a read timeout longer than the keepalive interval.
 
 ### TMDB credits
 
@@ -79,9 +79,8 @@ This product uses the TMDB API but is not endorsed or certified by TMDB. See [TM
 
 ### Coolify deployment for filmbase.top
 
-FilmBase's `.top` app runs on a different VPS under Coolify. The Docker image includes `ops/filmbase-alerts-sync.mjs` for a [Coolify scheduled task](https://coolify.io/docs/applications/operations/scheduled-tasks). In the `.top` application:
+FilmBase's `.top` app runs on a different VPS under Coolify. The Docker image starts the web server and checks the authenticated sync endpoint immediately and every five minutes. It creates a private runtime sync secret if `FILMBASE_ALERTS_SYNC_SECRET` is not configured. The first successful FilmBase sync establishes the baseline and populates the movie picks. `ops/filmbase-alerts-sync.mjs` remains available to run a manual sync inside the container when a secret is explicitly configured.
 
-1. Set runtime environment variables `TMDB_API_READ_TOKEN`, `FILMBASE_ALERTS_SYNC_SECRET`, and `FILMBASE_ALERTS_FILE=/app/data/alerts.json`. Store the token and a generated secret in Coolify; do not put them in the repository.
-2. Add [persistent storage](https://coolify.io/docs/applications/configuration/persistent-storage) with destination `/app/data` so event IDs, replay history, and the daily pick survive deployments. Use one running application replica because the state is a local file.
-3. Deploy the new image. Add a scheduled task with command `node /app/ops/filmbase-alerts-sync.mjs`, frequency `*/5 * * * *`, and timeout at least 240 seconds. Execute it once in Coolify to establish the initial FilmBase baseline.
-4. Check `/api/v1/alerts`, both pick endpoints, and an SSE connection through the public `.top` proxy. The SSE response sets `X-Accel-Buffering: no`; if the proxy buffers streams, disable buffering for `/api/v1/alerts/stream` in the proxy configuration.
+For production durability, add [Coolify persistent storage](https://coolify.io/docs/applications/configuration/persistent-storage) with destination `/app/data`. The image declares this as a Docker volume, but an explicit Coolify mount is needed to retain the same state across image replacements. Keep the app at one running replica because the state is a local file. Set `TMDB_API_READ_TOKEN` as a runtime environment variable in Coolify to enable TMDB release events. `FILMBASE_ALERTS_FILE` defaults to `/app/data/alerts.json`.
+
+Check `/api/v1/alerts`, both pick endpoints, and an SSE connection through the public `.top` proxy after deployment. The SSE response sets `X-Accel-Buffering: no`; if the proxy buffers streams, disable buffering for `/api/v1/alerts/stream` in the proxy configuration.

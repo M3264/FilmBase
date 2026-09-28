@@ -36,10 +36,10 @@ const upstreamPort = upstream.address().port
 const dir = await mkdtemp(join(tmpdir(), 'filmbase-alerts-test-'))
 const base = 'http://127.0.0.1:3341'
 let child
-function start() {
-  child = spawn('node', ['.next/standalone/server.js'], { cwd: process.cwd(), env: {
+function start(mode = 'server') {
+  child = spawn('node', [mode === 'runner' ? 'ops/filmbase-alerts-runner.mjs' : '.next/standalone/server.js'], { cwd: process.cwd(), env: {
     ...process.env, PORT: '3341', HOSTNAME: '127.0.0.1', FILMBASE_ALERTS_FILE: join(dir, 'state.json'),
-    FILMBASE_ALERTS_SYNC_SECRET: 'test-secret', FILMBASE_API2_URL: `http://127.0.0.1:${upstreamPort}`,
+    FILMBASE_ALERTS_SYNC_SECRET: 'test-secret', FILMBASE_SERVER_PATH: join(process.cwd(), '.next/standalone/server.js'), FILMBASE_API2_URL: `http://127.0.0.1:${upstreamPort}`,
     FILMBASE_TMDB_API_URL: `http://127.0.0.1:${upstreamPort}`, TMDB_API_READ_TOKEN: 'test-token',
   }, stdio: 'ignore' })
 }
@@ -98,6 +98,14 @@ try {
   assert.equal((await get('/api/v1/alerts')).body.events.length, 4)
   const persisted = JSON.parse(await readFile(join(dir, 'state.json'), 'utf8'))
   assert.equal(persisted.events.length, 4)
+  await stop()
+  await rm(join(dir, 'state.json'))
+  start('runner'); await ready()
+  for (let i = 0; i < 50; i++) {
+    if ((await get('/api/v1/picks/daily')).status === 200) break
+    await new Promise(resolve => setTimeout(resolve, 100))
+  }
+  assert.equal((await get('/api/v1/picks/daily')).status, 200)
   console.log('alerts integration passed')
 } finally {
   await stop()
