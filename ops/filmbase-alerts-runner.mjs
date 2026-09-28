@@ -5,7 +5,7 @@ const secret = process.env.FILMBASE_ALERTS_SYNC_SECRET || randomBytes(32).toStri
 const port = process.env.PORT || '3000'
 const serverPath = process.env.FILMBASE_SERVER_PATH || '/app/server.js'
 const server = spawn(process.execPath, [serverPath], {
-  env: { ...process.env, FILMBASE_ALERTS_SYNC_SECRET: secret },
+  env: { ...process.env, HOSTNAME: '0.0.0.0', FILMBASE_ALERTS_SYNC_SECRET: secret },
   stdio: 'inherit',
 })
 
