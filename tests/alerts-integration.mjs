@@ -39,7 +39,7 @@ let child
 function start(mode = 'server') {
   child = spawn('node', [mode === 'runner' ? 'ops/filmbase-alerts-runner.mjs' : '.next/standalone/server.js'], { cwd: process.cwd(), env: {
     ...process.env, PORT: '3341', HOSTNAME: '127.0.0.1', FILMBASE_ALERTS_FILE: join(dir, 'state.json'),
-    FILMBASE_ALERTS_SYNC_SECRET: 'test-secret', FILMBASE_SERVER_PATH: join(process.cwd(), '.next/standalone/server.js'), FILMBASE_API2_URL: `http://127.0.0.1:${upstreamPort}`,
+    FILMBASE_ALERTS_SYNC_SECRET: mode === 'runner' ? '' : 'test-secret', FILMBASE_SERVER_PATH: join(process.cwd(), '.next/standalone/server.js'), FILMBASE_API2_URL: `http://127.0.0.1:${upstreamPort}`,
     FILMBASE_TMDB_API_URL: `http://127.0.0.1:${upstreamPort}`, TMDB_API_READ_TOKEN: 'test-token',
   }, stdio: 'ignore' })
 }
