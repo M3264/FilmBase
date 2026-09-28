@@ -21,6 +21,9 @@ const upstream = createServer((request, response) => {
     const match = url.searchParams.get('q') === 'Theatrical Film'
     response.end(JSON.stringify({ data: match ? [title(4, 'Theatrical Film (2026)', 'A matching FilmBase listing.')] : [] })); return
   }
+  if (url.pathname.startsWith('/v1/titles/')) {
+    response.end(JSON.stringify({ data: { synopsis: 'A continuing series story.' } })); return
+  }
   if (url.pathname === '/discover/movie') {
     const theatrical = url.searchParams.get('with_release_type') === '2|3'
     response.end(JSON.stringify({ results: theatrical ? [
@@ -86,7 +89,7 @@ try {
   assert.match(pick.pick.url, /^https:\/\/filmbase\.top\/movie\/fb-1$/)
   assert.equal((await get('/api/v1/picks/random')).body.contentType, 'movie')
   assert.equal((await sync()).body.cursor, first.body.cursor)
-  feed = [title(3, 'Third Film (2026)', 'A new movie story.'), title(2, 'Example Series Season 1 (Episode 4 Added)', 'A continuing series story.'), ...feed]
+  feed = [title(3, 'Third Film (2026)', 'A new movie story.'), title(2, 'Example Series Season 1 (Episode 4 Added)'), ...feed]
   const second = await sync()
   assert.equal(second.body.filmbase, 2)
   const newer = (await get(`/api/v1/alerts?after=${first.body.cursor}&limit=1`)).body
@@ -114,11 +117,14 @@ try {
   assert.equal(persisted.events.length, 4)
   delete persisted.events[0].description
   delete persisted.events[0].filmbaseUrl
+  persisted.events[2].description = null
+  delete persisted.detailsChecked[persisted.events[2].id]
   await writeFile(join(dir, 'state.json'), JSON.stringify(persisted))
   await sync()
   const backfilled = (await get('/api/v1/alerts')).body.events[0]
   assert.equal(backfilled.description, 'A verified movie overview.')
   assert.equal(backfilled.filmbaseUrl, 'https://filmbase.top/movie/fb-4')
+  assert.equal((await get('/api/v1/alerts')).body.events[2].description, 'A continuing series story.')
   await stop()
   await rm(join(dir, 'state.json'))
   start('runner'); await ready()

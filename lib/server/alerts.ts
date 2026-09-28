@@ -25,8 +25,8 @@ export type AlertEvent = {
 }
 type Pick = { title: string; poster: string | null; url: string; contentType: "movie"; source: "FilmBase" }
 type FeedTitle = { id: string; title: string; type?: ContentType; year?: number | null; synopsis?: string | null; imageUrl?: string | null; providers?: Array<{ provider: string; id: string }> }
-type State = { version: 1; sequence: number; events: AlertEvent[]; seen: Record<string, string>; movies: Pick[]; daily: { date: string; pick: Pick } | null; tmdbThrough: string | null }
-const empty = (): State => ({ version: 1, sequence: 0, events: [], seen: {}, movies: [], daily: null, tmdbThrough: null })
+type State = { version: 1; sequence: number; events: AlertEvent[]; seen: Record<string, string>; detailsChecked: Record<string, string>; movies: Pick[]; daily: { date: string; pick: Pick } | null; tmdbThrough: string | null }
+const empty = (): State => ({ version: 1, sequence: 0, events: [], seen: {}, detailsChecked: {}, movies: [], daily: null, tmdbThrough: null })
 const statePath = () => process.env.FILMBASE_ALERTS_FILE || "/app/data/alerts.json"
 const day = (date: Date) => date.toISOString().slice(0, 10)
 const cutoff = (date: Date) => new Date(date.getTime() - 30 * 86400000).toISOString()
@@ -36,6 +36,7 @@ export async function readAlerts(): Promise<State> {
   try {
     const value = JSON.parse(await readFile(statePath(), "utf8")) as State
     if (value.version !== 1 || !Array.isArray(value.events) || !value.seen || !Array.isArray(value.movies)) throw new Error("Invalid alerts state")
+    value.detailsChecked ||= {}
     return value
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") return empty()
@@ -92,7 +93,15 @@ async function fetchFilmBase(): Promise<FeedTitle[]> {
   if (!Array.isArray(body.data) || !body.data.length || !body.data.some((item) => filmPath(item))) throw new Error("FilmBase feed is empty or invalid")
   return body.data
 }
-function syncFilmBase(state: State, feed: FeedTitle[], now: Date): number {
+async function fetchFilmBaseSynopsis(id: string): Promise<{ synopsis: string | null; checked: boolean }> {
+  try {
+    const response = await fetch(`${api2()}/v1/titles/${encodeURIComponent(id)}`, { cache: "no-store", signal: AbortSignal.timeout(10000) })
+    if (!response.ok) return { synopsis: null, checked: false }
+    const body = await response.json() as { data?: { synopsis?: string | null } }
+    return { synopsis: description(body.data?.synopsis), checked: true }
+  } catch { return { synopsis: null, checked: false } }
+}
+async function syncFilmBase(state: State, feed: FeedTitle[], now: Date): Promise<number> {
   const initial = !Object.keys(state.seen).some((key) => key.startsWith("ninejarocks:"))
   let added = 0
   const movies: Pick[] = []
@@ -104,7 +113,10 @@ function syncFilmBase(state: State, feed: FeedTitle[], now: Date): number {
     if (state.seen[item.id]) continue
     state.seen[item.id] = now.toISOString()
     if (initial) continue
-    append(state, { kind: "filmbase_new", title: item.title, contentType: type, poster: item.imageUrl || null, description: description(item.synopsis), episode: type === "series" || type === "anime" ? latestEpisode(item.title) : null, date: day(now), source: "FilmBase", url: path, filmbaseUrl: path, tmdbUrl: null, availableOnFilmBase: true }, now)
+    const feedSynopsis = description(item.synopsis)
+    const detail = feedSynopsis ? null : await fetchFilmBaseSynopsis(item.id)
+    append(state, { kind: "filmbase_new", title: item.title, contentType: type, poster: item.imageUrl || null, description: feedSynopsis || detail?.synopsis || null, episode: type === "series" || type === "anime" ? latestEpisode(item.title) : null, date: day(now), source: "FilmBase", url: path, filmbaseUrl: path, tmdbUrl: null, availableOnFilmBase: true }, now)
+    if (detail?.checked) state.detailsChecked[String(state.sequence)] = now.toISOString()
     added++
   }
   state.movies = movies.reverse()
@@ -164,12 +176,16 @@ async function syncTmdbDay(state: State, target: string, now: Date): Promise<num
   return count
 }
 async function backfillEventDetails(state: State) {
-  for (const event of state.events.filter((item) => item.description === undefined || item.filmbaseUrl === undefined).slice(0, 20)) {
+  const now = Date.now()
+  for (const event of state.events.filter((item) => item.description === undefined || item.filmbaseUrl === undefined || (item.kind === "filmbase_new" && item.description === null && now - Date.parse(state.detailsChecked[item.id] || "1970-01-01") >= 86400000)).slice(0, 20)) {
     if (event.kind === "filmbase_new") {
-      event.description = null
+      const id = event.url.match(/\/movie\/fb-(\d+)/)?.[1]
+      const detail = id ? await fetchFilmBaseSynopsis(`ninejarocks:${id}`) : null
+      event.description = detail?.synopsis || event.description || null
       event.episode = event.contentType === "series" || event.contentType === "anime" ? latestEpisode(event.title) : null
       event.filmbaseUrl = event.url
       event.tmdbUrl = null
+      if (detail?.checked) state.detailsChecked[event.id] = new Date(now).toISOString()
       continue
     }
     const tmdbUrl = event.tmdbUrl || event.url
@@ -197,7 +213,7 @@ export async function synchronize(now = new Date()) {
     const result = { filmbase: 0, tmdb: 0, errors: [] as string[] }
     try {
       const feed = await fetchFilmBase()
-      result.filmbase = syncFilmBase(state, feed, now)
+      result.filmbase = await syncFilmBase(state, feed, now)
       await save(state)
     } catch (error) { result.errors.push(`FilmBase: ${(error as Error).message}`) }
     if (process.env.TMDB_API_READ_TOKEN || process.env.TMDB_READ_ACCESS_TOKEN || process.env.TMDB_API_TOKEN) {
@@ -215,6 +231,8 @@ export async function synchronize(now = new Date()) {
     const threshold = cutoff(now)
     state.events = state.events.filter((event) => event.publishedAt >= threshold)
     state.seen = Object.fromEntries(Object.entries(state.seen).filter(([key, seenAt]) => key.startsWith("ninejarocks:") || seenAt >= threshold))
+    const retained = new Set(state.events.map((event) => event.id))
+    state.detailsChecked = Object.fromEntries(Object.entries(state.detailsChecked).filter(([id]) => retained.has(id)))
     if (state.movies.length && state.daily?.date !== day(now)) state.daily = dailyPick(state, now)
     await save(state)
     return { ...result, cursor: String(state.sequence), tmdbThrough: state.tmdbThrough }
