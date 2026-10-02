@@ -1,5 +1,6 @@
 "use server"
 
+import { FILMBASE_API_URL } from "@/lib/api-config"
 import { getTitleOffers, resolveSourceOffer } from "@/lib/api"
 
 export async function prepareTitleOffer(titlePath: string, offerIndex: number) {
@@ -25,7 +26,7 @@ export async function prepareTitleOffer(titlePath: string, offerIndex: number) {
     let offerHost = ""
     try { offerHost = new URL(offer.url).hostname.toLowerCase() } catch { /* resolved below */ }
     if (offerHost === "loadedfiles.net" || offerHost.endsWith(".loadedfiles.net")) {
-      const apiBase = process.env.FILMBASE_API2_URL || "https://api2.filmbase.fun"
+      const apiBase = FILMBASE_API_URL
       return {
         success: true as const,
         url: `${apiBase.replace(/\/$/, "")}/api/download-file?url=${encodeURIComponent(offer.url)}`,

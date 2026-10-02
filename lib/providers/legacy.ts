@@ -6,9 +6,10 @@ import {
   type CatalogTitle,
   type SourceOffer,
 } from "@/lib/domain/catalog"
+import { FILMBASE_API_URL, FILMBASE_ANIME_API_URL } from "@/lib/api-config"
 import { fetchJson } from "@/lib/providers/http"
 
-export const LEGACY_URL = process.env.FILMBASE_LEGACY_API_URL || "https://api.filmbase.fun"
+export const LEGACY_URL = FILMBASE_API_URL
 
 export interface LegacyMovie {
   title: string
@@ -33,7 +34,11 @@ export interface LegacyDetails {
 }
 
 export async function legacyJson<T>(path: string, init?: RequestInit): Promise<T> {
-  return fetchJson<T>(`${LEGACY_URL}${path}`, { ...init, provider: "legacy" })
+  return fetchJson<T>(`${path.startsWith("/api/anime/") ? FILMBASE_ANIME_API_URL : LEGACY_URL}${path}`, { ...init, provider: "legacy" })
+}
+
+export function normalizeLegacyImageUrl(value: string): string {
+  return value.startsWith("/wp-content/") ? `https://thenkiri.ng${value}` : value
 }
 
 export function normalizeLegacyMovie(movie: LegacyMovie): CatalogTitle {
@@ -44,7 +49,7 @@ export function normalizeLegacyMovie(movie: LegacyMovie): CatalogTitle {
     type,
     title: movie.title.trim(),
     year: titleYear(movie.title),
-    imageUrl: movie.imageUrl || null,
+    imageUrl: normalizeLegacyImageUrl(movie.imageUrl || "") || null,
     backdropUrl: null,
     synopsis: movie.summary?.trim() || null,
     genres: movie.categories || [],

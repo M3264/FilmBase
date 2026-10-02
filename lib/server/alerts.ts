@@ -1,3 +1,4 @@
+import { FILMBASE_API_URL } from "@/lib/api-config"
 import "server-only"
 
 import { randomInt, timingSafeEqual } from "node:crypto"
@@ -30,7 +31,7 @@ const empty = (): State => ({ version: 1, sequence: 0, events: [], seen: {}, det
 const statePath = () => process.env.FILMBASE_ALERTS_FILE || "/app/data/alerts.json"
 const day = (date: Date) => date.toISOString().slice(0, 10)
 const cutoff = (date: Date) => new Date(date.getTime() - 30 * 86400000).toISOString()
-const api2 = () => process.env.FILMBASE_API2_URL || "https://api2.filmbase.fun"
+const api2 = () => FILMBASE_API_URL
 
 export async function readAlerts(): Promise<State> {
   try {

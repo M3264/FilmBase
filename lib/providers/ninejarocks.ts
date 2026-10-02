@@ -6,10 +6,11 @@ import {
   type CatalogTitle,
   type SourceOffer,
 } from "@/lib/domain/catalog"
+import { FILMBASE_API_URL } from "@/lib/api-config"
 import { fetchJson } from "@/lib/providers/http"
 import moviePathsById from "@/lib/movie-sitemap-paths.json"
 
-export const NINEJAROCKS_URL = process.env.FILMBASE_API2_URL || "https://api2.filmbase.fun"
+export const NINEJAROCKS_URL = FILMBASE_API_URL
 
 export interface NinejaMovie {
   id: string | number

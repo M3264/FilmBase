@@ -11,7 +11,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Image host is not allowed" }, { status: 403 })
   }
   try {
-    const response = await fetch(target, { headers: { Referer: "https://9jarocks.net/", "User-Agent": "Mozilla/5.0 FilmBase/1.0" }, next: { revalidate: 86400 } })
+    const response = await fetch(target, { headers: { Referer: `${target.origin}/`, "User-Agent": "Mozilla/5.0 FilmBase/1.0" }, next: { revalidate: 86400 } })
     if (!response.ok) return NextResponse.json({ error: "Image unavailable" }, { status: response.status })
     const contentType = response.headers.get("content-type") || "image/jpeg"
     if (!contentType.startsWith("image/")) return NextResponse.json({ error: "Not an image" }, { status: 415 })

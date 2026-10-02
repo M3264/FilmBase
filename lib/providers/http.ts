@@ -1,3 +1,4 @@
+import { FILMBASE_API_URL, FILMBASE_ANIME_API_URL } from "@/lib/api-config"
 import { CatalogApiError, type Provider } from "@/lib/domain/catalog"
 
 export async function fetchJson<T>(
@@ -44,8 +45,8 @@ function assertAllowedUpstream(value: string, provider: Provider | null): void {
   }
 
   const allowed = [
-    process.env.FILMBASE_LEGACY_API_URL || "https://api.filmbase.fun",
-    process.env.FILMBASE_API2_URL || "https://api2.filmbase.fun",
+    FILMBASE_API_URL,
+    FILMBASE_ANIME_API_URL,
     "https://api.themoviedb.org",
   ].map((origin) => new URL(origin).origin)
 

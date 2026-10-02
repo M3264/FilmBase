@@ -17,6 +17,7 @@ import {
   legacyOffers,
   normalizeLegacyDetail,
   normalizeLegacyMovie,
+  normalizeLegacyImageUrl,
   type LegacyDetails,
   type LegacyMovie,
 } from "@/lib/providers/legacy"
@@ -314,7 +315,7 @@ export async function getNavLinks(): Promise<NavLinks> {
 
 export async function getHomeData(): Promise<HomeSection[]> {
   const data = await legacyJson<{ data?: { sections?: HomeSection[] } }>("/api/home", { next: { revalidate: 900 } })
-  return data.data?.sections || []
+  return (data.data?.sections || []).map((section) => ({ ...section, items: section.items.map(withLegacyArtwork) }))
 }
 
 export async function searchMovies(query: string, page = 1): Promise<SearchResult> {
@@ -372,7 +373,7 @@ export async function resolveDownloadLink(intermediateUrl: string): Promise<{ fi
 
 async function searchMoviesLegacy(query: string, page = 1): Promise<SearchResult> {
   const data = await legacyJson<{ data?: SearchResult }>(`/api/search?query=${encodeURIComponent(query)}&page=${page}`, { next: { revalidate: 300 } })
-  return data.data || { listTitle: query, currentPage: page, totalPages: 1, items: [] }
+  return data.data ? { ...data.data, items: data.data.items.map(withLegacyArtwork) } : { listTitle: query, currentPage: page, totalPages: 1, items: [] }
 }
 
 async function getMovieDetailsLegacy(path: string): Promise<MovieDetails> {
@@ -400,7 +401,11 @@ async function getLegacyCatalogTitle(path: string): Promise<CatalogTitle> {
 async function getGenreMoviesLegacy(genre: string, page = 1): Promise<SearchResult> {
   const cleanGenre = genre.replace(/\/$/, "")
   const data = await legacyJson<{ data?: SearchResult }>(`/api/list/${cleanGenre}?page=${page}`, { next: { revalidate: 900 } })
-  return data.data || { listTitle: cleanGenre, currentPage: page, totalPages: 1, items: [] }
+  return data.data ? { ...data.data, items: data.data.items.map(withLegacyArtwork) } : { listTitle: cleanGenre, currentPage: page, totalPages: 1, items: [] }
+}
+
+function withLegacyArtwork(item: MovieItem): MovieItem {
+  return { ...item, imageUrl: normalizeLegacyImageUrl(item.imageUrl || "") }
 }
 
 export function catalogToMovieItem(item: CatalogTitle): MovieItem {

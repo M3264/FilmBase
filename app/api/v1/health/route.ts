@@ -1,28 +1,20 @@
-import { apiOrigins } from "@/lib/api"
-import { NINEJAROCKS_URL } from "@/lib/providers/ninejarocks"
+import { FILMBASE_API_URL } from "@/lib/api-config"
 import { apiSuccess } from "@/lib/server/api-response"
 
 export async function GET() {
-  const checks = await Promise.all([
-    check("legacy", apiOrigins.legacy),
-    check("ninejarocks", NINEJAROCKS_URL),
-  ])
-  return apiSuccess({ status: checks.some((item) => item.ok) ? "available" : "unavailable", providers: checks })
-}
-
-async function check(provider: string, url: string) {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), 3_000)
   const started = Date.now()
+  let ok = false
   try {
-    // Some upstream FastAPI deployments do not implement HEAD even though GET
-    // health endpoints are available. Keep the probe read-only but use GET so
-    // the provider status reflects the contract we actually consume.
-    const response = await fetch(url, { cache: "no-store", signal: controller.signal })
-    return { provider, ok: response.ok, latencyMs: Date.now() - started }
-  } catch {
-    return { provider, ok: false, latencyMs: Date.now() - started }
-  } finally {
-    clearTimeout(timer)
-  }
+    const response = await fetch(`${FILMBASE_API_URL}/v1/health`, { cache: "no-store", signal: controller.signal })
+    const body = await response.json()
+    ok = response.ok && body.data?.status === "ok" && body.data?.database === "ok"
+  } catch { /* report the unavailable upstream */ }
+  finally { clearTimeout(timer) }
+  return apiSuccess({
+    status: ok ? "available" : "unavailable",
+    apiUrl: FILMBASE_API_URL,
+    providers: ["legacy", "ninejarocks"].map((provider) => ({ provider, ok, latencyMs: Date.now() - started })),
+  })
 }
