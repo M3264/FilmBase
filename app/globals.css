@@ -116,9 +116,9 @@
 }
 
 /* WhatsApp channel pop-up */
-.whatsapp-popup { width: min(26rem,calc(100vw - 2rem)); gap: .75rem; border: 1px solid var(--foreground); border-radius: 0; background: var(--card); color: var(--card-foreground); box-shadow: 8px 8px 0 var(--foreground); }
+.whatsapp-popup { width: min(26rem,calc(100vw - 2rem)); max-height: calc(100dvh - 2rem); overflow-y: auto; overscroll-behavior: contain; gap: .75rem; border: 1px solid var(--foreground); border-radius: 0; background: var(--card); color: var(--card-foreground); box-shadow: 8px 8px 0 var(--foreground); }
 .whatsapp-popup .eyebrow { color: var(--primary); }
-.whatsapp-popup [data-slot="dialog-title"] { font-size: clamp(1.6rem,5vw,2rem); line-height: 1.05; letter-spacing: -.04em; }
+.whatsapp-popup [data-slot="dialog-title"] { font-size: clamp(1.6rem,5vw,2rem); line-height: 1.05; letter-spacing: -.04em; text-wrap: balance; }
 .whatsapp-popup [data-slot="dialog-description"] { line-height: 1.5; }
 .whatsapp-popup-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; margin-top: .75rem; }
 .whatsapp-popup-actions a,.whatsapp-popup-actions button { display: inline-flex; align-items: center; justify-content: center; gap: .35rem; min-height: 2.75rem; padding: .6rem .8rem; font-size: .75rem; font-weight: 800; }
@@ -126,6 +126,9 @@
 .whatsapp-popup-actions a:hover { background: var(--primary); color: var(--primary-foreground); }
 .whatsapp-popup-actions button { border: 1px solid var(--border); }
 .whatsapp-popup-actions button:hover { background: var(--secondary); }
+.whatsapp-popup-follow { font-size: .8rem; line-height: 1.5; color: var(--muted-foreground); }
+.whatsapp-popup-follow a { color: var(--foreground); text-decoration: underline; text-underline-offset: .2em; }
+.whatsapp-popup-follow a:hover { color: var(--primary); }
 
 /* Install prompt: deliberately compact so it feels like a desk notice, not an ad. */
 .pwa-install { position: fixed; z-index: 80; right: clamp(.75rem,3vw,2rem); bottom: clamp(.75rem,3vw,2rem); display: flex; align-items: center; gap: .7rem; max-width: min(25rem, calc(100vw - 1.5rem)); padding: .7rem; border: 1px solid var(--foreground); background: var(--card); color: var(--card-foreground); box-shadow: 6px 6px 0 var(--foreground); }
