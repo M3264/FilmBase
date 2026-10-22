@@ -5,7 +5,7 @@ import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import { ThemeProvider } from "@/components/theme-provider"
 import { PwaRegister } from "@/components/pwa-register"
-import { WhatsAppNotice } from "@/components/whatsapp-notice"
+
 import { SITE_URL } from "@/lib/site-url"
 import "./globals.css"
 
@@ -39,7 +39,6 @@ export default function RootLayout({
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
         <ThemeProvider>
           <PwaRegister />
-          <WhatsAppNotice />
           {children}
           <Script
             src="https://aw.kennyy.tech/api/script.js?siteId=349f6b798e8d"
