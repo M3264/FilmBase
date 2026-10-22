@@ -1,6 +1,6 @@
 import type React from "react"
 import type { Metadata } from "next"
-import Script from "next/script"
+
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import { ThemeProvider } from "@/components/theme-provider"
@@ -36,14 +36,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script src="https://aw.kennyy.tech/api/script.js?siteId=1ea654e39ec8" defer />
+      </head>
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
         <ThemeProvider>
           <PwaRegister />
           {children}
-          <Script
-            src="https://aw.kennyy.tech/api/script.js?siteId=349f6b798e8d"
-            strategy="afterInteractive"
-          />
         </ThemeProvider>
       </body>
     </html>
