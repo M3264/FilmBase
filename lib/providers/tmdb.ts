@@ -43,7 +43,8 @@ export async function enrichWithTmdb(items: CatalogTitle[], limit = 12): Promise
       const kind = item.tmdbType || (item.type === "series" ? "tv" : "movie")
       let tmdbId = item.tmdbId
       if (!tmdbId) {
-        const search = await fetchJson<TmdbSearchResult>(query(`/search/${kind}?query=${encodeURIComponent(item.title)}&page=1&include_adult=false&language=en-US`), { headers: headers(), next: { revalidate: 86400 }, provider: "tmdb", timeoutMs: 3500 })
+        const searchTitle = item.title.replace(/\s*\((?:19|20)\d{2}\)\s*/g, " ").replace(/\s+/g, " ").trim() || item.title
+        const search = await fetchJson<TmdbSearchResult>(query(`/search/${kind}?query=${encodeURIComponent(searchTitle)}&page=1&include_adult=false&language=en-US`), { headers: headers(), next: { revalidate: 86400 }, provider: "tmdb", timeoutMs: 3500 })
         const match = (search.results || []).find((result) => {
           const date = result.release_date || result.first_air_date || ""
           return !item.year || !date || date.startsWith(String(item.year))
