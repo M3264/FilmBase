@@ -2,7 +2,7 @@ import type { CatalogTitle } from "@/lib/domain/catalog"
 import { fetchJson } from "@/lib/providers/http"
 
 type TmdbSearchResult = { results?: Array<{ id: number; media_type?: string; title?: string; name?: string; release_date?: string; first_air_date?: string }> }
-type TmdbDetails = { id: number; runtime?: number | null; vote_average?: number; genres?: Array<{ name: string }>; overview?: string; tagline?: string; release_date?: string; first_air_date?: string; credits?: { cast?: Array<{ name?: string }>; crew?: Array<{ name?: string; job?: string }> } }
+type TmdbDetails = { id: number; runtime?: number | null; vote_average?: number; genres?: Array<{ name: string }>; overview?: string; tagline?: string; release_date?: string; first_air_date?: string; credits?: { cast?: Array<{ name?: string }>; crew?: Array<{ name?: string; job?: string }> }; videos?: { results?: Array<{ key?: string; site?: string; type?: string; official?: boolean; name?: string }> } }
 
 const TOKEN = process.env.TMDB_API_READ_TOKEN
 const API_KEY = process.env.TMDB_API_KEY
@@ -14,6 +14,25 @@ function headers(): HeadersInit {
 
 function query(path: string): string {
   return API_KEY ? `${BASE}${path}${path.includes("?") ? "&" : "?"}api_key=${encodeURIComponent(API_KEY)}` : `${BASE}${path}`
+}
+
+function pickTrailerKey(results?: Array<{ key?: string; site?: string; type?: string; official?: boolean }>): string | null {
+  const youtube = (results || []).filter((video) => video.site === "YouTube" && video.key)
+  if (!youtube.length) return null
+  const score = (type?: string) => {
+    const value = (type || "").toLowerCase()
+    if (value === "trailer") return 0
+    if (value === "teaser") return 1
+    if (value === "clip") return 2
+    if (value === "featurette") return 3
+    return 4
+  }
+  const sorted = [...youtube].sort((a, b) => {
+    const official = Number(b.official ?? false) - Number(a.official ?? false)
+    if (official !== 0) return official
+    return score(a.type) - score(b.type)
+  })
+  return sorted[0]?.key || null
 }
 
 export async function enrichWithTmdb(items: CatalogTitle[], limit = 12): Promise<CatalogTitle[]> {
@@ -32,9 +51,10 @@ export async function enrichWithTmdb(items: CatalogTitle[], limit = 12): Promise
         if (!match) return
         tmdbId = match.id
       }
-      const detail = await fetchJson<TmdbDetails>(query(`/${kind}/${tmdbId}?language=en-US&append_to_response=credits`), { headers: headers(), next: { revalidate: 86400 }, provider: "tmdb", timeoutMs: 3500 })
+      const detail = await fetchJson<TmdbDetails>(query(`/${kind}/${tmdbId}?language=en-US&append_to_response=credits,videos`), { headers: headers(), next: { revalidate: 86400 }, provider: "tmdb", timeoutMs: 3500 })
       item.tmdbId = detail.id
       item.tmdbType = kind
+      item.trailerKey = pickTrailerKey(detail.videos?.results) ?? item.trailerKey ?? null
       item.runtime = detail.runtime || null
       item.rating = typeof detail.vote_average === "number" && detail.vote_average > 0 ? detail.vote_average : item.rating
       item.tagline = detail.tagline || item.tagline

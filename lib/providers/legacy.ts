@@ -60,6 +60,7 @@ export function normalizeLegacyMovie(movie: LegacyMovie): CatalogTitle {
     tmdbId: null,
     tmdbType: null,
     tagline: null,
+    trailerKey: null,
     cast: [],
     director: null,
     releaseDate: movie.date || null,
