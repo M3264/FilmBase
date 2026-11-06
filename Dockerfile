@@ -9,6 +9,7 @@ RUN npm run build
 
 # Runner
 FROM node:20-alpine
+RUN apk add --no-cache curl
 WORKDIR /app
 
 COPY --from=builder /app/.next/standalone ./
