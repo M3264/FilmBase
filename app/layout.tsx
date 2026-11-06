@@ -11,7 +11,7 @@ import "./globals.css"
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: { default: "FilmBase — Films, series and anime", template: "%s — FilmBase" },
+  title: { default: "FilmBase | Movies, series and anime", template: "%s — FilmBase" },
   description: "A clear, curated archive of movies, series and anime.",
   alternates: { canonical: "/" },
   openGraph: { siteName: "FilmBase", type: "website", url: "/", images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "FilmBase movie archive" }] },
