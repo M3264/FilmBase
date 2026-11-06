@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { Suspense } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Download, ExternalLink, Play } from "lucide-react"
+import { Clapperboard, Download, ExternalLink, Play } from "lucide-react"
 import { getCatalogDetail, getNavLinks, getRelatedCatalogTitles, catalogToMovieItem } from "@/lib/api"
 import { displayTitle } from "@/lib/presentation"
 import { Header } from "@/components/header"
@@ -13,7 +13,7 @@ import { prepareTitleOffer } from "@/app/movie/actions"
 import { publicImageUrl } from "@/lib/presentation-images"
 import { MovieCard } from "@/components/movie-card"
 import { StreamPlayer } from "@/components/stream-player"
-import { TrailerView } from "@/components/trailer-view"
+import { TrailerPreview } from "@/components/trailer-preview"
 import { JsonLd } from "@/components/json-ld"
 import { SeoBreadcrumbs, breadcrumbSchema } from "@/components/seo-breadcrumbs"
 import { SITE_URL } from "@/lib/site-url"
@@ -78,7 +78,7 @@ export default async function MoviePage({ params }: { params: Promise<{ path: st
             <h1 className="mt-4 max-w-[19ch] break-words text-[clamp(2.35rem,6vw,4.9rem)] font-black leading-[.9] tracking-[-.055em]">{name}</h1>
             <div className="mt-6 flex flex-wrap gap-2">
               {hasAdFreeStream ? <a href="#watch-heading" className="inline-flex min-h-10 items-center gap-2 bg-primary px-4 text-xs font-black uppercase tracking-[.08em] text-primary-foreground hover:bg-foreground"><Play className="h-3.5 w-3.5 fill-current" /> Play</a> : null}
-              <TrailerView title={name} year={title.year} trailerKey={title.trailerKey} />
+              <a href="#trailer-heading" className="inline-flex min-h-10 items-center gap-2 border border-foreground px-4 text-xs font-black uppercase tracking-[.08em] hover:bg-foreground hover:text-background"><Clapperboard className="h-3.5 w-3.5" /> Trailer</a>
               <a href="#offers-heading" className="inline-flex min-h-10 items-center gap-2 border border-foreground px-4 text-xs font-black uppercase tracking-[.08em] hover:bg-foreground hover:text-background"><Download className="h-3.5 w-3.5" /> Download</a>
             </div>
             {metadata.length ? <dl className="mt-5 flex flex-wrap border-l border-t border-border">{metadata.map(([label, value]) => <div key={label} className="min-w-[6.5rem] flex-1 border-b border-r border-border px-3 py-2.5"><dt className="data-type text-[8px] font-bold uppercase tracking-[.12em] text-muted-foreground">{label}</dt><dd className="mt-1 text-xs font-bold capitalize sm:text-sm">{value}</dd></div>)}</dl> : null}
@@ -88,6 +88,8 @@ export default async function MoviePage({ params }: { params: Promise<{ path: st
             {(title.cast.length || title.director) ? <section className="mt-4 border-b border-border pb-4"><div className="flex flex-wrap items-baseline gap-x-5 gap-y-2 text-sm">{title.director ? <p><span className="data-type mr-2 text-[8px] font-bold uppercase tracking-[.12em] text-primary">Director</span><strong>{title.director}</strong></p> : null}{title.cast.length ? <p className="min-w-0 text-muted-foreground"><span className="data-type mr-2 text-[8px] font-bold uppercase tracking-[.12em] text-primary">Cast</span>{title.cast.slice(0, 4).join(" · ")}</p> : null}</div>{title.cast.length > 4 ? <details className="mt-3 text-xs text-muted-foreground"><summary className="w-fit cursor-pointer font-bold text-foreground underline decoration-border underline-offset-4">Full cast · {title.cast.length}</summary><p className="mt-3 max-w-2xl leading-6">{title.cast.join(" · ")}</p></details> : null}</section> : null}
           </div>
         </article>
+
+        <TrailerPreview title={name} year={title.year} trailerKey={title.trailerKey} />
 
         {hasAdFreeStream ? <section className="mx-auto mt-12 max-w-5xl" aria-labelledby="watch-heading">
           <div className="mb-5 flex items-end justify-between gap-4 border-b-2 border-foreground pb-4"><div><p className="eyebrow text-primary">FilmBase watch room</p><h2 id="watch-heading" className="mt-2 text-3xl font-black tracking-[-.04em] sm:text-4xl">Stream this title</h2></div><p className="max-w-sm text-xs leading-5 text-muted-foreground">Adaptive HLS playback. No pop-ups, overlays, or ad interruptions inside the player.</p></div>
