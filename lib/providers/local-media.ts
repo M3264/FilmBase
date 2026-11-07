@@ -21,6 +21,7 @@ export const localSpiderTitle: CatalogTitle = {
   tmdbType: "movie",
   tagline: "The friendly neighbourhood is about to change.",
   trailerKey: null,
+  trailerSource: null,
   cast: ["Tom Holland", "Zendaya", "Jacob Batalon"],
   director: null,
   releaseDate: "2026-07-31",

@@ -29,6 +29,7 @@ export interface CatalogTitle {
   director: string | null
   releaseDate: string | null
   trailerKey: string | null
+  trailerSource: "tmdb" | "youtube" | null
   status: "ongoing" | "complete" | null
   latestEpisode: string | null
   date: string | null
@@ -168,6 +169,7 @@ export function mergeCatalogTitles(items: CatalogTitle[]): CatalogTitle[] {
       tmdbType: current.tmdbType ?? item.tmdbType,
       tagline: current.tagline ?? item.tagline,
       trailerKey: current.trailerKey ?? item.trailerKey,
+      trailerSource: current.trailerSource ?? item.trailerSource,
       cast: current.cast.length ? current.cast : item.cast,
       director: current.director ?? item.director,
       releaseDate: current.releaseDate ?? item.releaseDate,

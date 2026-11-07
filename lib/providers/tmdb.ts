@@ -55,7 +55,9 @@ export async function enrichWithTmdb(items: CatalogTitle[], limit = 12): Promise
       const detail = await fetchJson<TmdbDetails>(query(`/${kind}/${tmdbId}?language=en-US&append_to_response=credits,videos`), { headers: headers(), next: { revalidate: 86400 }, provider: "tmdb", timeoutMs: 3500 })
       item.tmdbId = detail.id
       item.tmdbType = kind
-      item.trailerKey = pickTrailerKey(detail.videos?.results) ?? item.trailerKey ?? null
+      const trailerKey = pickTrailerKey(detail.videos?.results) ?? item.trailerKey ?? null
+      item.trailerKey = trailerKey
+      item.trailerSource = trailerKey ? "tmdb" : item.trailerSource ?? null
       item.runtime = detail.runtime || null
       item.rating = typeof detail.vote_average === "number" && detail.vote_average > 0 ? detail.vote_average : item.rating
       item.tagline = detail.tagline || item.tagline

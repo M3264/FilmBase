@@ -89,7 +89,7 @@ export default async function MoviePage({ params }: { params: Promise<{ path: st
           </div>
         </article>
 
-        <TrailerPreview title={name} year={title.year} trailerKey={title.trailerKey} />
+        <TrailerPreview title={name} path={moviePath} year={title.year} trailerKey={title.trailerKey} trailerSource={title.trailerSource} />
 
         {hasAdFreeStream ? <section className="mx-auto mt-12 max-w-5xl" aria-labelledby="watch-heading">
           <div className="mb-5 flex items-end justify-between gap-4 border-b-2 border-foreground pb-4"><div><p className="eyebrow text-primary">FilmBase watch room</p><h2 id="watch-heading" className="mt-2 text-3xl font-black tracking-[-.04em] sm:text-4xl">Stream this title</h2></div><p className="max-w-sm text-xs leading-5 text-muted-foreground">Adaptive HLS playback. No pop-ups, overlays, or ad interruptions inside the player.</p></div>

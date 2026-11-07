@@ -131,6 +131,7 @@ export function normalizeNinejaMovie(movie: NinejaMovie): CatalogTitle {
     tmdbType: null,
     tagline: null,
     trailerKey: null,
+    trailerSource: null,
     cast: [],
     director: null,
     releaseDate: movie.date_posted || null,

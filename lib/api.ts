@@ -37,6 +37,7 @@ import {
 import { displayTitle } from "@/lib/presentation"
 import { LOCAL_MEDIA_PATH, localOffers, localSpiderTitle } from "@/lib/providers/local-media"
 import { enrichWithTmdb } from "@/lib/providers/tmdb"
+import { searchYoutubeTrailer } from "@/lib/providers/youtube"
 
 export type {
   CatalogPage,
@@ -244,6 +245,17 @@ function offerMatchesTitle(offer: SourceOffer, title: string): boolean {
 }
 
 export async function getCatalogDetail(idOrPath: string): Promise<{ title: CatalogTitle; offers: SourceOffer[] }> {
+  const detail = await getCatalogDetailInner(idOrPath)
+  if (!detail.title.trailerKey) {
+    const fallback = await searchYoutubeTrailer(detail.title.title, detail.title.year)
+    if (fallback) {
+      detail.title = { ...detail.title, trailerKey: fallback, trailerSource: "youtube" }
+    }
+  }
+  return detail
+}
+
+async function getCatalogDetailInner(idOrPath: string): Promise<{ title: CatalogTitle; offers: SourceOffer[] }> {
   if (idOrPath === LOCAL_MEDIA_PATH || idOrPath === localSpiderTitle.id || idOrPath === `fb-${LOCAL_MEDIA_PATH}`) {
     await enrichWithTmdb([localSpiderTitle], 1)
     return { title: localSpiderTitle, offers: localOffers() }

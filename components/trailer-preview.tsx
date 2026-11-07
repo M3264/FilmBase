@@ -1,12 +1,15 @@
 import { Clapperboard, ExternalLink } from "lucide-react"
+import { WrongTrailerButton } from "@/components/wrong-trailer-button"
 
 interface TrailerPreviewProps {
   title: string
+  path: string
   year?: number | null
   trailerKey?: string | null
+  trailerSource?: "tmdb" | "youtube" | null
 }
 
-export function TrailerPreview({ title, year, trailerKey }: TrailerPreviewProps) {
+export function TrailerPreview({ title, path, year, trailerKey, trailerSource }: TrailerPreviewProps) {
   const searchQuery = encodeURIComponent(`${title}${year ? ` ${year}` : ""} official trailer`)
   const searchUrl = `https://www.youtube.com/results?search_query=${searchQuery}`
   const watchUrl = trailerKey ? `https://www.youtube.com/watch?v=${trailerKey}` : searchUrl
@@ -54,7 +57,8 @@ export function TrailerPreview({ title, year, trailerKey }: TrailerPreviewProps)
         </div>
       )}
       <p className="mt-3 text-xs leading-5 text-muted-foreground">
-        Trailer streams from YouTube. FilmBase never hosts trailers, only links the official upload when available.
+        Trailer streams from YouTube. {trailerSource === "youtube" ? "Auto-matched by search, may be wrong. " : "FilmBase links the official upload when available. "}
+        {trailerKey && trailerSource === "youtube" ? <WrongTrailerButton path={path} title={title} videoId={trailerKey} /> : null}
       </p>
     </section>
   )
