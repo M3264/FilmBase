@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
+  experimental: {
+    serverComponentsExternalPackages: ['yt-search', 'cheerio'],
+  },
   eslint: {
     ignoreDuringBuilds: true,
   },
