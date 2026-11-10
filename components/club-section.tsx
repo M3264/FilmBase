@@ -5,7 +5,7 @@ import type { HomeSection, MovieItem } from "@/lib/api"
 import { displayTitle, publicMoviePath } from "@/lib/presentation"
 import { publicImageUrl } from "@/lib/presentation-images"
 
-const BASE_URL = "https://api.filmbase.fun"
+const BASE_URL = "https://api.filmbase.top"
 
 function imageFor(source?: string) {
   if (!source) return null
