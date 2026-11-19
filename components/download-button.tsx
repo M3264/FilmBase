@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
-import { ArrowUpRight, Check, Download, Loader2, RotateCcw } from "lucide-react"
+import { useId, useState } from "react"
+import { OfferPlayer } from "@/components/offer-player"
+import { ArrowUpRight, Check, Download, Loader2, Play, RotateCcw, X } from "lucide-react"
 
 type PreparedDownload =
   | { success: true; url: string; externalHost: string; fileName?: string; autoDownload?: boolean }
@@ -17,6 +18,7 @@ interface DownloadButtonProps {
   sourceHost?: string
   prepareDownload: () => Promise<PreparedDownload>
   compact?: boolean
+  watchUrl?: string
 }
 
 function formatDownloadText(text: string, season?: string, episode?: string): string {
@@ -52,7 +54,10 @@ export function DownloadButton({
   sourceHost,
   prepareDownload,
   compact = false,
+  watchUrl,
 }: DownloadButtonProps) {
+  const [watching, setWatching] = useState(false)
+  const playerId = useId()
   const [isLoading, setIsLoading] = useState(false)
   const [prepared, setPrepared] = useState<Extract<PreparedDownload, { success: true }> | null>(null)
   const [error, setError] = useState("")
@@ -106,7 +111,11 @@ export function DownloadButton({
           </div>
         </div>
 
-        <div className="col-span-2 border-t border-dashed border-border p-2 sm:col-span-1 sm:border-l sm:border-t-0 sm:p-2.5">
+        <div className="col-span-2 flex flex-wrap gap-2 border-t border-dashed border-border p-2 sm:col-span-1 sm:border-l sm:border-t-0 sm:p-2.5">
+          {watchUrl ? <button type="button" onClick={() => setWatching(value => !value)} aria-expanded={watching} aria-controls={playerId} className="inline-flex min-h-11 w-full items-center justify-center gap-2 bg-primary px-4 py-2 text-xs font-bold uppercase tracking-[.1em] text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:w-auto">
+            {watching ? <X className="h-4 w-4" aria-hidden="true" /> : <Play className="h-4 w-4" aria-hidden="true" />}
+            {watching ? "Close player" : "Watch now"}
+          </button> : null}
           {prepared ? (
             <a
               href={prepared.url}
@@ -130,6 +139,8 @@ export function DownloadButton({
           )}
         </div>
       </div>
+
+      <div id={playerId} hidden={!watching}>{watching && watchUrl ? <OfferPlayer url={watchUrl} label={displayText} format={codec} /> : null}</div>
 
       <div className="sr-only" aria-live="polite">
         {isLoading ? `Preparing ${displayText}` : null}
