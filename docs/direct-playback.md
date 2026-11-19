@@ -1,8 +1,8 @@
 # Playback
 
-FilmBase shows **Watch now** next to eligible existing LoadedFiles offers. Each file/episode keeps its own **Download file** action. Opening the player fetches the original file through `/api/watch?path=<catalogue-reference>&offer=<index>`; browsing a title does not prefetch movie bytes.
+FilmBase shows **Watch now** next to eligible existing LoadedFiles and Downloadwella offers. Each file/episode keeps its own **Download file** action. Opening the player fetches the original file through `/api/watch?path=<catalogue-reference>&offer=<index>`; browsing a title does not prefetch movie bytes.
 
-The watch route accepts catalogue references, not arbitrary media URLs. Provider eligibility is shared by the page and route. Direct playback forwards single byte ranges and returns the original media inline. Closing the player releases its connection; backend cancellation reaches resolution and upstream requests.
+The watch route accepts catalogue references, not arbitrary media URLs. Provider eligibility is shared by the page and route. Downloadwella episode landing pages ending in a media extension plus `.html` are resolved server-side through the existing provider resolver; only validated direct media destinations are passed to playback or conversion. Resolved tokens are reused for at most 45 seconds in a bounded in-memory cache, never by saving movie files. Direct playback forwards single byte ranges and returns the original media inline. Closing the player releases its connection; backend cancellation reaches resolution and upstream requests.
 
 ## Compatible streaming
 
@@ -34,6 +34,7 @@ npm run build
 node tests/unified-api-integration.mjs
 node tests/alerts-integration.mjs
 node tests/compatible-proxy-integration.mjs
+node tests/downloadwella-playback-integration.mjs
 ```
 
 The proxy test uses a deliberately controlled upstream response to verify routing and headers, not to claim real video playback. Source-eligibility unit tests require Node 22+:

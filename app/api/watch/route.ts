@@ -3,6 +3,7 @@ import { setTimeout as delay } from "node:timers/promises"
 import { getTitleOffers } from "@/lib/api"
 import { FILMBASE_API_URL } from "@/lib/api-config"
 import { directPlaybackSource } from "@/lib/providers/direct-playback"
+import { resolvePlaybackSource } from "@/lib/server/playback-source"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -46,11 +47,15 @@ export async function GET(request: NextRequest) {
   catch { return failure("The file source is unavailable. Try downloading instead.", 502) }
   const offer = offers[Number(indexText)]
   if (!offer) return failure("This file is no longer available", 404)
-  const source = directPlaybackSource(offer.url)
+  let source = directPlaybackSource(offer.url)
   if (!source) {
     return failure("This offer does not support direct playback. Use Download file instead.", 415)
   }
 
+  if (source.requiresResolution) {
+    try { source = await resolvePlaybackSource(offer.url, request.signal) }
+    catch { return failure("This file host could not prepare the episode. Retry or use Download file.", 502) }
+  }
   const url = new URL(`${FILMBASE_API_URL}${compatible ? "/api/compatible-file" : "/api/download-file"}`)
   url.searchParams.set("url", source.url.href)
   if (compatible) { url.searchParams.set("session", session); url.searchParams.set("start", seek) }

@@ -16,6 +16,18 @@ test("untrusted destinations and non-video files do not receive Watch now", () =
   }
 })
 
+test("Downloadwella episode landing pages are eligible and require resolution", () => {
+  const page = "https://downloadwella.com/ixz11jxlau53/The.Body.S01E01.(THENKIRI.COM).mkv.html"
+  const source = directPlaybackSource(page)
+  assert.ok(source)
+  assert.equal(source.contentType, "video/x-matroska")
+  assert.equal(source.requiresResolution, true)
+  assert.ok(directWatchUrl("the-body-s01-tv-series/", page, 0))
+  assert.equal(directPlaybackSource("https://dwbe02.downloadwella.com/d/token/The.Body.S01E01.mkv")?.requiresResolution, false)
+  assert.equal(directPlaybackSource("https://downloadwella.com/advertisement.html"), null)
+  assert.equal(directPlaybackSource("https://downloadwella.com.evil.test/episode.mkv.html"), null)
+})
+
 test("watch links contain only a catalogue reference and offer selection", () => {
   const url = directWatchUrl("fb-419951", "https://loadedfiles.net/id/movie.mkv", 2)
   const parsed = new URL(url, "https://filmbase.top")

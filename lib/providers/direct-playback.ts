@@ -3,14 +3,18 @@ const VIDEO_TYPES: Record<string, string> = {
 }
 
 // Eligibility to attempt native playback, not a guarantee of codec support.
-export function directPlaybackSource(value: string): { url: URL; contentType: string } | null {
+export function directPlaybackSource(value: string): { url: URL; contentType: string; requiresResolution: boolean } | null {
   try {
     const url = new URL(value)
     const host = url.hostname.toLowerCase()
-    const extension = url.pathname.match(/\.([a-z0-9]+)$/i)?.[1]?.toLowerCase() || ""
+    const loaded = host === "loadedfiles.net" || host.endsWith(".loadedfiles.net")
+    const downloadwella = host === "downloadwella.com" || host.endsWith(".downloadwella.com")
+    const requiresResolution = downloadwella && /\.html$/i.test(url.pathname)
+    const filename = requiresResolution ? url.pathname.replace(/\.html$/i, "") : url.pathname
+    const extension = filename.match(/\.([a-z0-9]+)$/i)?.[1]?.toLowerCase() || ""
     const contentType = VIDEO_TYPES[extension]
-    if (url.protocol !== "https:" || url.username || url.password || (host !== "loadedfiles.net" && !host.endsWith(".loadedfiles.net")) || !contentType) return null
-    return { url, contentType }
+    if (url.protocol !== "https:" || url.username || url.password || (!loaded && !downloadwella) || !contentType) return null
+    return { url, contentType, requiresResolution }
   } catch { return null }
 }
 

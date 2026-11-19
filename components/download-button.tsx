@@ -97,7 +97,7 @@ export function DownloadButton({
 
   return (
     <article className={`border border-border bg-card text-card-foreground transition-[transform,box-shadow] ${compact ? "" : "shadow-[3px_3px_0_hsl(var(--border))] motion-safe:hover:-translate-y-0.5 motion-safe:hover:shadow-[5px_5px_0_hsl(var(--border))]"}`}>
-      <div className="grid grid-cols-[3.25rem_minmax(0,1fr)] sm:grid-cols-[4rem_minmax(0,1fr)_auto]">
+      <div className={`grid grid-cols-[3.25rem_minmax(0,1fr)] ${compact ? "" : "sm:grid-cols-[4rem_minmax(0,1fr)_auto]"}`}>
         <div className={`grid place-items-center border-r border-dashed border-border bg-secondary/60 px-2 ${compact ? "py-2.5" : "py-4"}`} aria-hidden="true">
           <span className="font-mono text-sm font-bold tracking-[.14em] text-muted-foreground">{offerNumber}</span>
         </div>
@@ -111,7 +111,7 @@ export function DownloadButton({
           </div>
         </div>
 
-        <div className="col-span-2 flex flex-wrap gap-2 border-t border-dashed border-border p-2 sm:col-span-1 sm:border-l sm:border-t-0 sm:p-2.5">
+        <div className={`col-span-2 flex flex-wrap gap-2 border-t border-dashed border-border p-2 sm:p-2.5 ${compact ? "" : "sm:col-span-1 sm:border-l sm:border-t-0"}`}>
           {watchUrl ? <button type="button" onClick={() => setWatching(value => !value)} aria-expanded={watching} aria-controls={playerId} className="inline-flex min-h-11 w-full items-center justify-center gap-2 bg-primary px-4 py-2 text-xs font-bold uppercase tracking-[.1em] text-primary-foreground hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:w-auto">
             {watching ? <X className="h-4 w-4" aria-hidden="true" /> : <Play className="h-4 w-4" aria-hidden="true" />}
             {watching ? "Close player" : "Watch now"}
