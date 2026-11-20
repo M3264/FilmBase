@@ -2,7 +2,7 @@ import { NextRequest } from "next/server"
 import { setTimeout as delay } from "node:timers/promises"
 import { getTitleOffers } from "@/lib/api"
 import { FILMBASE_API_URL } from "@/lib/api-config"
-import { directPlaybackSource } from "@/lib/providers/direct-playback"
+import { directPlaybackSource, inferUpstreamContentType } from "@/lib/providers/direct-playback"
 import { resolvePlaybackSource } from "@/lib/server/playback-source"
 
 export const dynamic = "force-dynamic"
@@ -91,8 +91,15 @@ export async function GET(request: NextRequest) {
     await upstream.body?.cancel()
     return failure("The file source is unavailable. Try downloading instead.", 502)
   }
+  // Bare file-host links carry no extension; learn the media type from the
+  // real upstream response instead of guessing. Anything else is download-only.
+  const inlineType = source.contentType || inferUpstreamContentType(contentType, upstream.headers.get("content-disposition"))
+  if (!inlineType) {
+    await upstream.body?.cancel()
+    return failure("This offer does not support direct playback. Use Download file instead.", 415)
+  }
   const headers = new Headers({
-    "Content-Type": compatible ? "video/mp4" : source.contentType,
+    "Content-Type": compatible ? "video/mp4" : inlineType,
     "Content-Disposition": "inline",
     "Cache-Control": "private, no-store",
     "X-Content-Type-Options": "nosniff",

@@ -28,6 +28,15 @@ test("Downloadwella episode landing pages are eligible and require resolution", 
   assert.equal(directPlaybackSource("https://downloadwella.com.evil.test/episode.mkv.html"), null)
 })
 
+test("bare LoadedFiles links without a file extension are eligible; type is learned at watch time", () => {
+  const source = directPlaybackSource("https://loadedfiles.net/bec88e2b980c6d01")
+  assert.ok(source)
+  assert.equal(source.contentType, null)
+  assert.equal(source.requiresResolution, false)
+  assert.ok(directWatchUrl("fb-171656", "https://loadedfiles.net/bec88e2b980c6d01", 0))
+  assert.equal(directPlaybackSource("https://loadedfiles.net/movie.zip"), null)
+})
+
 test("watch links contain only a catalogue reference and offer selection", () => {
   const url = directWatchUrl("fb-419951", "https://loadedfiles.net/id/movie.mkv", 2)
   const parsed = new URL(url, "https://filmbase.top")

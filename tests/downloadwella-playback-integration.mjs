@@ -21,7 +21,13 @@ const upstream=createServer(async(req,res)=>{
  if(u.pathname==='/api/download-file'||u.pathname==='/api/compatible-file'){
   delivered.push({endpoint:u.pathname,url:u.searchParams.get('url')})
   if(u.pathname==='/api/download-file'){
-   res.writeHead(206,{'Content-Type':'application/octet-stream','Content-Length':'4','Content-Range':'bytes 0-3/100','Accept-Ranges':'bytes'})
+   // Bare file-host links behave like the real Loki offers: no extension in
+   // the catalogue URL, media type declared only by the upstream response.
+   if(/loadedfiles\.net\/[a-f0-9]+$/.test(u.searchParams.get('url')||'')){
+    res.writeHead(206,{'Content-Type':'video/x-matroska; charset=binary','Content-Length':'4','Content-Range':'bytes 0-3/100','Accept-Ranges':'bytes'})
+   }else{
+    res.writeHead(206,{'Content-Type':'application/octet-stream','Content-Length':'4','Content-Range':'bytes 0-3/100','Accept-Ranges':'bytes'})
+   }
    res.end(Buffer.from([0x1a,0x45,0xdf,0xa3]))
   }else{res.writeHead(200,{'Content-Type':'video/mp4'});res.write('controlled compatible stream');res.end()}
   return
@@ -52,5 +58,30 @@ try{
   assert.equal(rejected.status,502,'unsafe or failed resolution must not become a proxy destination')
  }
  assert.equal(delivered.length,2,'no unsafe resolved destination reached either media backend')
+ const bare=new URLSearchParams({path:'fb-171656',offer:'0'})
+ // Controlled catalogue for the extensionless-link shape (see Loki S01).
+ const bareUpstream=createServer((req,res)=>{
+  const u=new URL(req.url,'http://127.0.0.1')
+  if(u.pathname.startsWith('/api/movie/')||u.pathname.startsWith('/api/titles/')){
+   res.setHeader('Content-Type','application/json')
+   res.end(JSON.stringify({title:'Loki Season 1 Episode 1 – 6 (Complete)',download_links:[{url:'https://loadedfiles.net/bec88e2b980c6d01',label:'[SERVER 1]'}]}));return
+  }
+  if(u.pathname==='/api/download-file'){
+   delivered.push({endpoint:u.pathname,url:u.searchParams.get('url')})
+   res.writeHead(206,{'Content-Type':'video/x-matroska; charset=binary','Content-Length':'4','Content-Range':'bytes 0-3/100','Accept-Ranges':'bytes'})
+   res.end(Buffer.from([0x1a,0x45,0xdf,0xa3]));return
+  }
+  res.writeHead(404);res.end()
+ })
+ await new Promise(r=>bareUpstream.listen(0,'127.0.0.1',r))
+ const bareChild=spawn('node',['.next/standalone/server.js'],{env:{...process.env,HOSTNAME:'127.0.0.1',PORT:'3347',FILMBASE_API_URL:`http://127.0.0.1:${bareUpstream.address().port}`,TMDB_API_READ_TOKEN:'',TMDB_API_KEY:''},stdio:'ignore'})
+ try{
+  let bareReady=false;for(let i=0;i<100;i++){try{if((await fetch('http://127.0.0.1:3347/api/healthz')).ok){bareReady=true;break}}catch{};await new Promise(r=>setTimeout(r,100))}
+  assert.ok(bareReady)
+  const streamed=await fetch(`http://127.0.0.1:3347/api/watch?${bare}`,{headers:{Range:'bytes=0-3'}})
+  assert.equal(streamed.status,206,'bare file-host links stream once upstream declares video')
+  assert.equal(streamed.headers.get('content-type'),'video/x-matroska')
+  assert.deepEqual([...new Uint8Array(await streamed.arrayBuffer())],[0x1a,0x45,0xdf,0xa3])
+ }finally{bareChild.kill('SIGTERM');await new Promise(r=>bareChild.once('exit',r));await new Promise(r=>bareUpstream.close(r))}
  console.log('Downloadwella playback: landing-page resolution, native ranges, conversion, bounded token reuse and unsafe-source rejection passed')
 }finally{child.kill('SIGTERM');await new Promise(r=>child.once('exit',r));await new Promise(r=>upstream.close(r))}
